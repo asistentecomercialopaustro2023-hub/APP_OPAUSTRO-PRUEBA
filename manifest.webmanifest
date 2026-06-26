@@ -1,0 +1,23 @@
+{
+  "name": "OPAUSTRO",
+  "short_name": "OPAUSTRO",
+  "description": "Sistema corporativo OPAUSTRO",
+  "start_url": "./Login/index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#eef4f8",
+  "theme_color": "#075f9b",
+  "icons": [
+    {
+      "src": "./Recuros_imagenes/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./Recuros_imagenes/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

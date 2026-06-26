@@ -1,0 +1,1573 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src &#39;self&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://app.powerbi.com https://cdnjs.cloudflare.com data: blob:; script-src &#39;self&#39; &#39;unsafe-inline&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://cdnjs.cloudflare.com; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data: https:; connect-src &#39;self&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://app.powerbi.com https://cdnjs.cloudflare.com; frame-src &#39;self&#39; https://app.powerbi.com https://docs.google.com; object-src &#39;none&#39;; base-uri &#39;self&#39;; form-action &#39;self&#39;; upgrade-insecure-requests;">
+  <title>OPAUSTRO | Inicio de sesi&oacute;n</title>
+  <link rel="icon" href="../Recuros_imagenes/icon-192.png">
+  <link rel="manifest" href="../manifest.webmanifest">
+  <meta name="theme-color" content="#075f9b">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="OPAUSTRO">
+  <style>
+    :root {
+      --brand: #075f9b;
+      --brand-dark: #073f63;
+      --brand-deep: #054667;
+      --brand-soft: #e8f4fb;
+      --ink: #09253d;
+      --muted: #64758a;
+      --line: #c9d8e5;
+      --surface: #ffffff;
+      --canvas: #eef4f8;
+      --side: #e4f0f5;
+      --danger: #b42318;
+      --success: #087443;
+      --shadow: 0 26px 70px rgba(2, 22, 37, .24);
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 16%, rgba(255, 255, 255, .13), transparent 28%),
+        linear-gradient(145deg, #06324f 0%, #075b87 44%, #0a7aab 100%);
+    }
+
+    button,
+    select,
+    input {
+      font: inherit;
+    }
+
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: clamp(18px, 4vw, 42px);
+    }
+
+    .login-screen.is-hidden,
+    .app-screen.is-hidden {
+      display: none;
+    }
+
+    .login-shell {
+      width: min(100%, 620px);
+      display: grid;
+      gap: clamp(18px, 4vw, 28px);
+      align-items: center;
+      justify-items: center;
+    }
+
+    .brand-panel {
+      width: min(100%, 430px);
+      display: grid;
+      place-items: center;
+    }
+
+    .logo-mark {
+      width: min(100%, 430px);
+      height: auto;
+      display: block;
+      padding: clamp(16px, 4vw, 24px) clamp(18px, 5vw, 30px);
+      background: rgba(255, 255, 255, .96);
+      border-radius: 8px;
+      box-shadow: 0 18px 54px rgba(0, 0, 0, .18);
+    }
+
+    .brand-panel h1,
+    .brand-panel p {
+      display: none;
+    }
+
+    .login-card {
+      width: min(100%, 620px);
+      background: var(--surface);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: clamp(26px, 5vw, 46px);
+      border: 1px solid rgba(255, 255, 255, .72);
+    }
+
+    .card-head {
+      margin-bottom: 30px;
+    }
+
+    .card-head h2 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      letter-spacing: 0;
+    }
+
+    .card-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    form {
+      display: grid;
+      gap: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-weight: 750;
+      color: #17334c;
+    }
+
+    .field {
+      position: relative;
+    }
+
+    .field-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      width: 32px;
+      height: 32px;
+      transform: translateY(-50%);
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+    }
+
+    .field-icon img {
+      max-width: 32px;
+      max-height: 32px;
+      object-fit: contain;
+      display: block;
+    }
+
+    select,
+    input {
+      width: 100%;
+      min-height: 58px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 0 82px 0 58px;
+      color: var(--ink);
+      background: #fbfdff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: var(--brand);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(7, 95, 155, .13);
+    }
+
+    .password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      width: 68px;
+      height: 38px;
+      transform: translateY(-50%);
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--brand-dark);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .password-toggle:hover {
+      background: var(--brand-soft);
+    }
+
+    .primary-btn {
+      min-height: 58px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0876b2, #065f97);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 850;
+      cursor: pointer;
+      box-shadow: 0 14px 30px rgba(7, 95, 155, .27);
+      transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.03);
+      box-shadow: 0 18px 34px rgba(7, 95, 155, .32);
+    }
+
+    .primary-btn:disabled {
+      cursor: wait;
+      opacity: .72;
+      transform: none;
+    }
+
+    .message {
+      min-height: 24px;
+      margin-top: 4px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+
+    .message.success {
+      color: var(--success);
+    }
+
+    .app-screen {
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--ink);
+      display: grid;
+      grid-template-rows: 100px 1fr;
+    }
+
+    .app-topbar {
+      height: 100px;
+      background: linear-gradient(90deg, var(--brand-deep), #0a6f9f);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 0 40px;
+      box-shadow: 0 2px 14px rgba(4, 29, 45, .18);
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .menu-toggle {
+      display: block;
+      width: 52px;
+      height: 52px;
+      border: 1px solid rgba(255, 255, 255, .36);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .08);
+      color: #fff;
+      cursor: pointer;
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .app-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .95);
+      padding: 6px;
+    }
+
+    .app-title small {
+      display: block;
+      color: #78e7ff;
+      font-size: .78rem;
+      font-weight: 900;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .app-title h1 {
+      margin: 0;
+      color: #fff;
+      font-size: 1.45rem;
+      line-height: 1.1;
+    }
+
+    .app-title span {
+      display: block;
+      margin-top: 8px;
+      color: rgba(255, 255, 255, .86);
+      font-size: .92rem;
+    }
+
+    .user-box {
+      text-align: right;
+      min-width: 190px;
+    }
+
+    .user-box strong {
+      display: block;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .user-box span {
+      display: block;
+      margin-top: 4px;
+      color: #c7f3ff;
+      font-size: .8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .logout-btn {
+      margin-top: 10px;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px solid #fff;
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .app-body {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 74px 1fr;
+      transition: grid-template-columns .18s ease;
+    }
+
+    .app-screen.sidebar-expanded .app-body {
+      grid-template-columns: 220px 1fr;
+    }
+
+    .module-sidebar {
+      background: var(--side);
+      border-right: 1px solid #d2e1e9;
+      padding: 18px 10px;
+      overflow: hidden;
+    }
+
+    .module-sidebar h2 {
+      margin: 0 0 28px;
+      color: #496575;
+      font-size: .9rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .module-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .module-link {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      background: transparent;
+      color: #14344c;
+      cursor: pointer;
+      text-align: left;
+      padding: 4px 2px;
+      font-size: 1rem;
+      border-radius: 8px;
+    }
+
+    .module-link strong,
+    .module-link small {
+      display: block;
+    }
+
+    .module-link small {
+      margin-top: 4px;
+      color: #6b7e8c;
+      font-size: .76rem;
+      line-height: 1.3;
+    }
+
+    .module-link.module-logistica {
+      min-height: 58px;
+      align-items: center;
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 8px 4px;
+      color: #14344c;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .module-link.module-logistica:hover,
+    .module-link.module-logistica.is-active {
+      color: var(--brand);
+      transform: none;
+    }
+
+    .module-logistica .module-card-icon {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      font-size: 1.65rem;
+    }
+
+    .module-logistica .module-copy strong {
+      font-size: .98rem;
+      letter-spacing: .02em;
+    }
+
+    .module-logistica .module-copy small {
+      color: #6b7e8c;
+      font-size: .72rem;
+    }
+
+    .app-screen:not(.sidebar-expanded) .module-sidebar {
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .app-screen:not(.sidebar-expanded) .module-sidebar h2,
+    .app-screen:not(.sidebar-expanded) .module-copy,
+    .app-screen:not(.sidebar-expanded) .module-link > span:not(.module-card-icon) {
+      display: none;
+    }
+
+    .app-screen:not(.sidebar-expanded) .module-link {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .module-link:hover,
+    .module-link.is-active {
+      color: var(--brand);
+    }
+
+    .module-link img {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+
+    .module-link .module-symbol {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      font-size: 1.55rem;
+      line-height: 1;
+    }
+
+    .module-workspace {
+      min-width: 0;
+      min-height: calc(100vh - 100px);
+      background: #f2f7fb;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .workspace-head {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 22px 32px;
+      border-bottom: 1px solid #dce7ee;
+      background: rgba(255, 255, 255, .56);
+    }
+
+    .workspace-head h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #12324a;
+    }
+
+    .workspace-head span {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .blank-panel {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      color: #7b8fa0;
+      text-align: center;
+    }
+
+    .blank-panel.module-host {
+      display: block;
+      padding: 0;
+      text-align: left;
+      background: #fff;
+    }
+
+    .module-frame {
+      width: 100%;
+      height: 100%;
+      min-height: calc(100vh - 174px);
+      border: 0;
+      display: block;
+      background: #fff;
+    }
+
+    .blank-panel p {
+      margin: 0;
+      max-width: 520px;
+      line-height: 1.55;
+    }
+
+    .bottom-nav {
+      display: none;
+    }
+
+
+
+    html,
+    body {
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    .app-screen {
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--ink);
+      display: grid;
+      grid-template-rows: 72px 1fr;
+    }
+
+    .app-topbar {
+      height: 72px;
+    }
+
+    .app-title small,
+    .app-title span {
+      display: none;
+    }
+
+    .app-title h1 {
+      font-size: 1.18rem;
+    }
+
+    .module-sidebar {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+
+    .module-sidebar h2,
+    .workspace-head {
+      display: none;
+    }
+
+    .module-workspace {
+      min-height: calc(100vh - 72px);
+      grid-template-rows: 1fr;
+    }
+
+    .module-frame {
+      min-height: calc(100vh - 72px);
+    }
+
+    .module-group {
+      border-bottom: 1px solid rgba(20,52,76,.08);
+      padding-bottom: 10px;
+    }
+
+    .group-toggle {
+      width: 100%;
+      min-height: 50px;
+      border: 0;
+      background: rgba(7, 95, 155, .08);
+      color: #075f9b;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 7px 10px;
+      text-align: left;
+      font-weight: 900;
+    }
+
+    .group-toggle:hover,
+    .module-group.is-open .group-toggle {
+      color: var(--brand);
+      background: rgba(7,95,155,.13);
+    }
+
+    .group-icon,
+    .module-symbol {
+      width: 34px;
+      min-width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      font-size: 1.3rem;
+    }
+
+    .group-name {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .group-caret {
+      font-size: .8rem;
+      transition: transform .18s ease;
+    }
+
+    .module-group.is-open .group-caret {
+      transform: rotate(90deg);
+    }
+
+    .group-items {
+      display: none;
+      padding: 8px 0 4px 20px;
+      gap: 6px;
+    }
+
+    .module-group.is-open .group-items {
+      display: grid;
+    }
+
+    .group-items .module-link {
+      min-height: 42px;
+      font-size: .92rem;
+      padding: 5px 4px;
+    }
+
+    .app-screen:not(.sidebar-expanded) .app-body {
+      grid-template-columns: 74px 1fr;
+    }
+
+    .app-screen:not(.sidebar-expanded) .group-name,
+    .app-screen:not(.sidebar-expanded) .group-caret,
+    .app-screen:not(.sidebar-expanded) .group-items {
+      display: none;
+    }
+
+    .app-screen:not(.sidebar-expanded) .group-toggle {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .app-screen.sidebar-expanded .group-name,
+    .app-screen.sidebar-expanded .group-caret {
+      display: inline-flex;
+    }
+
+    @media (max-width: 850px) {
+      .app-screen {
+        grid-template-rows: 72px 1fr;
+      }
+
+      .app-topbar {
+        height: 72px;
+      }
+
+      .app-body {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .module-sidebar {
+        display: block;
+        position: fixed;
+        top: 72px;
+        left: 0;
+        bottom: 0;
+        width: min(82vw, 320px);
+        z-index: 40;
+        transform: translateX(-105%);
+        transition: transform .18s ease;
+        box-shadow: 18px 0 50px rgba(0,0,0,.22);
+      }
+
+      .app-screen.sidebar-open .module-sidebar {
+        transform: translateX(0);
+      }
+
+      .app-screen.sidebar-open::after {
+        content: "";
+        position: fixed;
+        inset: 72px 0 0;
+        background: rgba(0,0,0,.22);
+        z-index: 30;
+      }
+
+      .module-workspace {
+        min-height: calc(100vh - 72px);
+        padding-bottom: 0;
+      }
+
+      .module-frame {
+        min-height: calc(100vh - 72px);
+      }
+
+      .bottom-nav {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 850px) {
+      .login-screen {
+        place-items: start center;
+      }
+
+      .login-shell {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      .brand-panel {
+        min-height: auto;
+        align-items: center;
+        text-align: center;
+        padding-top: 8px;
+      }
+
+      .logo-mark {
+        width: min(320px, 100%);
+        margin-bottom: 18px;
+      }
+
+      .brand-panel p {
+        display: none;
+      }
+
+      .app-screen {
+        grid-template-rows: 86px 1fr;
+      }
+
+      .app-topbar {
+        height: 86px;
+        padding: 0 14px;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .app-logo {
+        width: 42px;
+        height: 42px;
+      }
+
+      .app-title small,
+      .app-title span {
+        display: none;
+      }
+
+      .app-title h1 {
+        font-size: 1.1rem;
+      }
+
+      .user-box {
+        min-width: 128px;
+      }
+
+      .user-box strong {
+        font-size: .9rem;
+      }
+
+      .app-body {
+        display: block;
+      }
+
+      .module-sidebar {
+        display: none;
+      }
+
+      .module-workspace {
+        min-height: calc(100vh - 86px);
+        padding-bottom: 82px;
+      }
+
+      .workspace-head {
+        display: none;
+      }
+
+      .bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        min-height: 64px;
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+        gap: 4px;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        background: rgba(255, 255, 255, .96);
+        border-top: 1px solid #d7e1e8;
+        z-index: 10;
+      }
+
+      .bottom-nav .module-link {
+        min-height: 54px;
+        justify-content: center;
+        gap: 3px;
+        flex-direction: column;
+        font-size: .74rem;
+        padding: 4px;
+      }
+
+      .bottom-nav .module-link img {
+        width: 30px;
+        height: 30px;
+      }
+
+      .bottom-nav .module-link.module-logistica {
+        min-height: 58px;
+        padding: 4px;
+        background: transparent;
+        box-shadow: none;
+        color: #14344c;
+      }
+
+      .bottom-nav .module-logistica .module-card-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        font-size: 1rem;
+        box-shadow: none;
+      }
+
+      .bottom-nav .module-logistica .module-copy strong {
+        font-size: .74rem;
+        color: #14344c;
+      }
+
+      .bottom-nav .module-logistica .module-copy small {
+        display: none;
+      }
+
+      .module-frame {
+        min-height: calc(100vh - 168px);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .login-screen {
+        padding: 18px 12px;
+      }
+
+      .login-card {
+        padding: 24px 18px;
+      }
+    }
+
+    /* Final responsive overrides for the unified module menu. */
+    @media (max-width: 850px) {
+      .login-shell {
+        width: min(100%, 620px);
+        justify-items: center;
+      }
+
+      .brand-panel {
+        width: min(100%, 400px);
+        padding-top: 0;
+      }
+
+      .logo-mark {
+        width: min(100%, 400px);
+        margin-bottom: 0;
+      }
+
+      .app-body {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .module-sidebar {
+        display: block;
+        position: fixed;
+        top: 86px;
+        left: 0;
+        bottom: 0;
+        width: min(84vw, 260px);
+        z-index: 40;
+        transform: translateX(-105%);
+        transition: transform .18s ease;
+        box-shadow: 18px 0 50px rgba(0, 0, 0, .22);
+      }
+
+      .app-screen.sidebar-open .module-sidebar {
+        transform: translateX(0);
+      }
+
+      .app-screen.sidebar-open .group-name,
+      .app-screen.sidebar-open .group-caret {
+        display: inline-flex;
+      }
+
+      .app-screen.sidebar-open .module-group.is-open .group-items {
+        display: grid;
+      }
+
+      .app-screen.sidebar-open .group-toggle {
+        justify-content: flex-start;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .module-workspace {
+        min-height: calc(100dvh - 86px);
+        padding-bottom: calc(76px + env(safe-area-inset-bottom));
+      }
+
+      .module-frame {
+        min-height: calc(100dvh - 162px - env(safe-area-inset-bottom));
+      }
+
+      .bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        min-height: 66px;
+        display: grid !important;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(68px, 1fr);
+        gap: 4px;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        background: rgba(255, 255, 255, .97);
+        border-top: 1px solid #d7e1e8;
+        z-index: 25;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+      }
+
+      .bottom-nav .module-link {
+        min-width: 68px;
+        min-height: 54px;
+        justify-content: center;
+        gap: 3px;
+        flex-direction: column;
+        font-size: .72rem;
+        line-height: 1.12;
+        padding: 4px 2px;
+        white-space: normal;
+      }
+
+      .bottom-nav .module-link img,
+      .bottom-nav .module-symbol {
+        width: 28px;
+        height: 28px;
+        font-size: 1.25rem;
+      }
+
+      .bottom-nav .module-link span:last-child {
+        display: block;
+        max-width: 74px;
+        text-align: center;
+      }
+
+      .bottom-nav .module-link.is-active {
+        color: var(--brand);
+        background: rgba(7, 95, 155, .08);
+      }
+    }
+
+    @media (max-width: 850px) and (orientation: landscape) {
+      .app-screen {
+        grid-template-rows: 64px 1fr;
+      }
+
+      .app-topbar {
+        height: 64px;
+      }
+
+      .module-sidebar {
+        top: 64px;
+        width: min(58vw, 280px);
+      }
+
+      .module-workspace {
+        min-height: calc(100dvh - 64px);
+        padding-bottom: calc(64px + env(safe-area-inset-bottom));
+      }
+
+      .module-frame {
+        min-height: calc(100dvh - 128px - env(safe-area-inset-bottom));
+      }
+
+      .bottom-nav {
+        min-height: 58px;
+        grid-auto-columns: minmax(84px, 1fr);
+        padding-top: 6px;
+        padding-bottom: calc(6px + env(safe-area-inset-bottom));
+      }
+
+      .bottom-nav .module-link {
+        min-height: 46px;
+        flex-direction: row;
+        font-size: .76rem;
+        gap: 6px;
+      }
+
+      .bottom-nav .module-link span:last-child {
+        max-width: 92px;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-screen" id="loginScreen">
+    <section class="login-shell">
+      <div class="brand-panel" aria-label="OPAUSTRO">
+        <img class="logo-mark" src="../Recuros_imagenes/logo_opaustro.png" alt="OPAUSTRO">
+      </div>
+
+      <section class="login-card" aria-label="Inicio de sesi&oacute;n">
+        <div class="card-head">
+          <h2>Iniciar sesi&oacute;n</h2>
+          <p>Selecciona tu rol, usuario e ingresa tu contrase&ntilde;a.</p>
+        </div>
+
+        <form id="loginForm" autocomplete="off">
+          <label>
+            Rol
+            <span class="field">
+              <span class="field-icon" aria-hidden="true"><img src="../Recuros_imagenes/rol.png" alt=""></span>
+              <select id="role" name="role" required>
+                <option value="">Seleccione un rol</option>
+              </select>
+            </span>
+          </label>
+
+          <label>
+            Usuario
+            <span class="field">
+              <span class="field-icon" aria-hidden="true"><img src="../Recuros_imagenes/usuario.png" alt=""></span>
+              <select id="user" name="user" required disabled>
+                <option value="">Seleccione su usuario</option>
+              </select>
+            </span>
+          </label>
+
+          <label>
+            Contrase&ntilde;a
+            <span class="field">
+              <span class="field-icon" aria-hidden="true"><img src="../Recuros_imagenes/contrase&ntilde;a.png" alt=""></span>
+              <input id="password" name="password" type="password" inputmode="numeric" required>
+              <button class="password-toggle" type="button" id="togglePassword" title="Mostrar u ocultar contrase&ntilde;a" aria-label="Mostrar u ocultar contrase&ntilde;a">Ver</button>
+            </span>
+          </label>
+
+          <button class="primary-btn" id="submitButton" type="submit">Ingresar</button>
+          <div class="message" id="message" role="status" aria-live="polite"></div>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <section class="app-screen is-hidden" id="appScreen" aria-label="M&oacute;dulos">
+    <header class="app-topbar">
+      <div class="app-brand">
+        <button class="menu-toggle" type="button" aria-label="Men&uacute;">☰</button>
+        <img class="app-logo" src="../Recuros_imagenes/icon-192.png" alt="OPAUSTRO">
+        <div class="app-title">
+          <h1 id="topModuleTitle">OPAUSTRO</h1>
+        </div>
+      </div>
+
+      <div class="user-box">
+        <strong id="sessionUser">Usuario</strong>
+        <span id="sessionRole">Rol</span>
+        <button class="logout-btn" type="button" id="logoutButton">Cerrar sesi&oacute;n</button>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <aside class="module-sidebar" aria-label="Lista de m&oacute;dulos">
+        
+        <nav class="module-list" id="sideModules"></nav>
+      </aside>
+
+      <main class="module-workspace">
+        <div class="workspace-head">
+          <h2 id="activeModuleTitle">OPAUSTRO</h2>
+          <span id="activeModuleMode">Seleccione una opci&oacute;n</span>
+        </div>
+        <section class="blank-panel" id="blankPanel">
+          <p>Seleccione un m&oacute;dulo para continuar.</p>
+        </section>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="bottomModules" aria-label="M&oacute;dulos"></nav>
+  </section>
+
+  <script>
+    const LOGIN_API_URL = 'https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec';
+    const SESSION_KEY = 'opaustro_session';
+    const ACTIVE_MODULE_KEY = 'opaustro_active_module';
+    const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
+    let inactivityTimer = null;
+
+    const MODULE_DEFINITIONS = {
+      Admin: {
+        label: "Admin",
+        icon: "../Recuros_imagenes/inventario.png",
+        path: "../Admin/index.html"
+      },
+      Ventas: {
+        label: "Ventas",
+        icon: "../Recuros_imagenes/resumen.png",
+        path: "../Ventas/ventas.html?embed=1",
+        embed: true
+      },
+      MapaVentas: {
+        label: "Mapa",
+        symbol: "map",
+        path: "../Ventas/ventas.html?embed=1",
+        embed: true
+      },
+      VentasOperativo: {
+        label: "Ventas",
+        symbol: "chart",
+        path: "../Ventas/ventas-reporte.html?r=ventas&embed=1",
+        embed: true
+      },
+      Cartera: {
+        label: "Cartera",
+        symbol: "wallet",
+        path: "../Ventas/ventas-reporte.html?r=cartera&embed=1",
+        embed: true
+      },
+      VentasGerencial: {
+        label: "Ventas Gerencial",
+        symbol: "board",
+        path: "../Ventas/ventas-reporte.html?r=gerencial&embed=1",
+        embed: true
+      },
+      Retorno: {
+        label: "Retorno",
+        symbol: "return",
+        path: "../Ventas/ventas-reporte.html?r=retornos&embed=1",
+        embed: true
+      },
+      Logistica: {
+        label: "Logística",
+        icon: "truck",
+        description: "Cabinets · Taller · Movimientos",
+        path: "../Logistica/cabinets.html?embed=1",
+        embed: true
+      },
+      Gerencia: {
+        label: "Gerencia",
+        icon: "../Recuros_imagenes/reporte.png",
+        path: "../Gerencia/tablero.html?embed=1",
+        embed: true
+      },
+      GerenciaTablero: {
+        label: "Tablero Control",
+        symbol: "dashboard",
+        path: "../Gerencia/tablero.html?embed=1",
+        embed: true
+      },
+      GerenciaRevision: {
+        label: "Revisión Costo",
+        symbol: "cost",
+        path: "../Gerencia/revision.html?embed=1",
+        embed: true
+      },
+      GerenciaFlujo: {
+        label: "Flujo Caja",
+        symbol: "cash",
+        path: "../Gerencia/flujo-caja-opaustro.html?embed=1",
+        embed: true
+      }
+    };
+
+    const PREVIEW_USERS = {
+      admin: ["Benjamin Picon"],
+      Gerencia: ["Patricio Posso", "Fernando Cantos"],
+      Logistica: ["Bryan Sanabria", "Manuel Guaman"],
+      Ventas: ["Bryan Nunez", "Milton Quezada", "Supervisor", "vendedores"]
+    };
+
+    const VENTAS_MODULES = ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno"];
+    const GERENCIA_MODULES = ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo"];
+
+    const SYMBOLS = {
+      map: "&#128506;&#65039;",
+      chart: "&#128202;",
+      wallet: "&#128188;",
+      board: "&#128200;",
+      return: "&#8617;",
+      dashboard: "&#128200;",
+      cost: "&#128176;",
+      cash: "&#128181;"
+    };
+
+    const AREA_GROUPS = [
+      {
+        id: "Ventas",
+        label: "Ventas",
+        icon: "&#128200;",
+        modules: ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno"]
+      },
+      {
+        id: "Logistica",
+        label: "Logística",
+        icon: "&#128666;",
+        modules: ["Logistica"]
+      },
+      {
+        id: "Gerencia",
+        label: "Gerencia",
+        icon: "&#128188;",
+        modules: ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo"]
+      }
+    ];
+
+    const state = {
+      usersByRole: {},
+      currentSession: null
+    };
+
+    const $ = (selector) => document.querySelector(selector);
+    const roleSelect = $("#role");
+    const userSelect = $("#user");
+    const form = $("#loginForm");
+    const message = $("#message");
+    const submitButton = $("#submitButton");
+
+    function setMessage(text, type) {
+      message.textContent = text || "";
+      message.className = `message ${type || ""}`;
+    }
+
+    function renderRoles(usersByRole) {
+      state.usersByRole = usersByRole || {};
+      roleSelect.innerHTML = '<option value="">Seleccione un rol</option>';
+      Object.keys(state.usersByRole).forEach((role) => {
+        const option = document.createElement("option");
+        option.value = role;
+        option.textContent = role === "admin" ? "Administrador" : role;
+        roleSelect.appendChild(option);
+      });
+      renderUsers(roleSelect.value);
+    }
+
+    function renderUsers(role) {
+      const users = state.usersByRole[role] || [];
+      userSelect.innerHTML = '<option value="">Seleccione su usuario</option>';
+      userSelect.disabled = users.length === 0;
+      users.forEach((person) => {
+        const option = document.createElement("option");
+        option.value = person.usuario;
+        option.textContent = person.razon || person.usuario;
+        userSelect.appendChild(option);
+      });
+    }
+
+    function loadLoginData() {
+      if (window.google && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler((response) => {
+            if (!response || !response.success) {
+              setMessage("No se pudo preparar el acceso. Intente nuevamente.", "error");
+              return;
+            }
+            renderRoles(response.usersByRole);
+            setMessage("", "");
+          })
+          .withFailureHandler(() => {
+            setMessage("No se pudo preparar el acceso. Intente nuevamente.", "error");
+          })
+          .getLoginData();
+        return;
+      }
+
+      if (!LOGIN_API_URL) {
+        renderRoles({});
+        setMessage("Configura LOGIN_API_URL para validar usuarios reales. Por seguridad no se permite acceso local con contraseñas libres.", "error");
+        return;
+      }
+      callLoginApi("getLoginData", {}).then((response) => {
+        if (!response || !response.success) {
+          setMessage((response && (response.detail || response.message)) || "No se pudo preparar el acceso.", "error");
+          return;
+        }
+        renderRoles(response.usersByRole);
+      }).catch(() => setMessage("No se pudo conectar con Login API.", "error"));
+    }
+
+    async function callLoginApi(action, payload) {
+      if (!LOGIN_API_URL) {
+        throw new Error("Configura LOGIN_API_URL con la URL /exec del Apps Script de Login para pruebas locales.");
+      }
+      const response = await fetch(LOGIN_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action, payload })
+      });
+      if (!response.ok) throw new Error("No se pudo contactar el servicio de Login.");
+      return response.json();
+    }
+
+    function authenticate(payload) {
+      return new Promise((resolve, reject) => {
+        if (window.google && google.script && google.script.run) {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .authenticate(payload);
+          return;
+        }
+        callLoginApi("authenticate", payload).then(resolve).catch(reject);
+      });
+    }
+
+    function createModuleButton(moduleName, session) {
+      const module = MODULE_DEFINITIONS[moduleName] || {
+        label: moduleName,
+        icon: "../Recuros_imagenes/resumen.png",
+        path: "#"
+      };
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "module-link";
+      button.dataset.module = moduleName;
+      if (module.symbol) {
+        button.innerHTML = `<span class="module-symbol" aria-hidden="true">${SYMBOLS[module.symbol] || "&#8226;"}</span><span>${module.label}</span>`;
+      } else if (module.icon && module.icon !== "truck") {
+        button.innerHTML = `<img src="${module.icon}" alt=""><span>${module.label}</span>`;
+      } else {
+        button.innerHTML = `<span class="module-symbol" aria-hidden="true">&#128666;</span><span>${module.label}</span>`;
+      }
+      button.addEventListener("click", () => activateModule(moduleName, session, true));
+      return button;
+    }
+
+    function expandModules(modules) {
+      const expanded = [];
+      (modules || []).forEach((moduleName) => {
+        if (moduleName === "Ventas") {
+          VENTAS_MODULES.forEach((ventasModule) => {
+            if (!expanded.includes(ventasModule)) expanded.push(ventasModule);
+          });
+          return;
+        }
+        if (moduleName === "Gerencia") {
+          GERENCIA_MODULES.forEach((gerenciaModule) => {
+            if (!expanded.includes(gerenciaModule)) expanded.push(gerenciaModule);
+          });
+          return;
+        }
+        if (!expanded.includes(moduleName)) expanded.push(moduleName);
+      });
+      return expanded;
+    }
+
+    function renderModuleGroups(session, visibleModules) {
+      const sideModules = $("#sideModules");
+      const bottomModules = $("#bottomModules");
+      sideModules.innerHTML = "";
+      bottomModules.innerHTML = "";
+
+      AREA_GROUPS.forEach((group) => {
+        const modules = group.modules.filter((moduleName) => visibleModules.includes(moduleName));
+        if (!modules.length) return;
+
+        const wrapper = document.createElement("section");
+        wrapper.className = "module-group";
+        wrapper.dataset.group = group.id;
+
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "group-toggle";
+        toggle.innerHTML = `<span class="group-icon" aria-hidden="true">${group.icon}</span><span class="group-name">${group.label}</span><span class="group-caret">›</span>`;
+        toggle.addEventListener("click", () => {
+          if (!window.matchMedia("(max-width: 850px)").matches) {
+            document.querySelector("#appScreen").classList.add("sidebar-expanded");
+          }
+          const willOpen = !wrapper.classList.contains("is-open");
+          sideModules.querySelectorAll(".module-group.is-open").forEach((openGroup) => {
+            if (openGroup !== wrapper) openGroup.classList.remove("is-open");
+          });
+          wrapper.classList.toggle("is-open", willOpen);
+        });
+
+        const items = document.createElement("div");
+        items.className = "group-items";
+        modules.forEach((moduleName) => items.appendChild(createModuleButton(moduleName, session)));
+
+        wrapper.appendChild(toggle);
+        wrapper.appendChild(items);
+        sideModules.appendChild(wrapper);
+      });
+
+      visibleModules.forEach((moduleName) => bottomModules.appendChild(createModuleButton(moduleName, session)));
+    }
+
+    function renderApp(session) {
+      state.currentSession = session;
+      persistSession(session);
+      $("#loginScreen").classList.add("is-hidden");
+      $("#appScreen").classList.remove("is-hidden");
+      $("#sessionUser").textContent = session.user || "Usuario";
+      $("#sessionRole").textContent = session.role === "admin" ? "Administrador" : session.role;
+
+      const visibleModules = expandModules(session.modules);
+      renderModuleGroups(session, visibleModules);
+
+      const savedModule = sessionStorage.getItem(ACTIVE_MODULE_KEY);
+      const firstModule = visibleModules.includes(savedModule) ? savedModule : visibleModules[0];
+      if (firstModule) activateModule(firstModule, session, false);
+      resetIdleTimer();
+    }
+
+    function activateModule(moduleName, session, pushHistory) {
+      const module = MODULE_DEFINITIONS[moduleName] || { label: moduleName };
+      document.querySelectorAll(".module-link").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.module === moduleName);
+      });
+      $("#activeModuleTitle").textContent = module.label;
+      $("#topModuleTitle").textContent = module.label;
+      $("#activeModuleMode").textContent = session.permissions === "lectura" ? "Solo lectura" : "Acceso autorizado";
+      sessionStorage.setItem(ACTIVE_MODULE_KEY, moduleName);
+      const panel = $("#blankPanel");
+      panel.classList.toggle("module-host", !!module.embed);
+      if (module.embed) {
+        const src = module.path + (module.path.includes("?") ? "&" : "?") + "v=" + Date.now();
+        panel.innerHTML = `<iframe class="module-frame" src="${src}" title="${module.label}" loading="eager"></iframe>`;
+      } else {
+        panel.innerHTML = `<p>El módulo ${module.label} está listo para recibir su contenido.</p>`;
+      }
+      $("#appScreen").classList.remove("sidebar-open");
+      if (pushHistory) history.pushState({ moduleName }, "", "#" + encodeURIComponent(moduleName));
+      resetIdleTimer();
+    }
+
+    function persistSession(session) {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        session,
+        lastActivity: Date.now()
+      }));
+    }
+
+    function restoreSession() {
+      try {
+        const raw = sessionStorage.getItem(SESSION_KEY);
+        if (!raw) return false;
+        const saved = JSON.parse(raw);
+        if (!saved.session || Date.now() - Number(saved.lastActivity || 0) > SESSION_TIMEOUT_MS) {
+          logout(true);
+          return false;
+        }
+        renderApp(saved.session);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function resetIdleTimer() {
+      if (!state.currentSession) return;
+      persistSession(state.currentSession);
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => logout(true), SESSION_TIMEOUT_MS);
+    }
+
+    ["click", "keydown", "touchstart", "mousemove", "scroll"].forEach((eventName) => {
+      window.addEventListener(eventName, resetIdleTimer, { passive: true });
+    });
+
+    function logout(expired) {
+      state.currentSession = null;
+      clearTimeout(inactivityTimer);
+      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(ACTIVE_MODULE_KEY);
+      $("#appScreen").classList.add("is-hidden");
+      $("#appScreen").classList.remove("sidebar-open");
+      $("#loginScreen").classList.remove("is-hidden");
+      form.reset();
+      renderUsers("");
+      setMessage(expired ? "Sesión cerrada por inactividad." : "", expired ? "error" : "");
+      $("#password").type = "password";
+      $("#togglePassword").textContent = "Ver";
+      history.replaceState({}, "", location.pathname);
+    }
+
+    roleSelect.addEventListener("change", () => {
+      renderUsers(roleSelect.value);
+      setMessage("", "");
+    });
+
+    $("#togglePassword").addEventListener("click", () => {
+      const password = $("#password");
+      const isPassword = password.type === "password";
+      password.type = isPassword ? "text" : "password";
+      $("#togglePassword").textContent = isPassword ? "Ocultar" : "Ver";
+      password.focus();
+    });
+
+    $("#logoutButton").addEventListener("click", () => logout(false));
+    $(".menu-toggle").addEventListener("click", () => {
+      const app = $("#appScreen");
+      if (window.matchMedia("(max-width: 850px)").matches) app.classList.toggle("sidebar-open");
+      else app.classList.toggle("sidebar-expanded");
+    });
+
+    window.addEventListener("popstate", (event) => {
+      if (!state.currentSession) return;
+      const moduleName = event.state && event.state.moduleName;
+      if (moduleName) activateModule(moduleName, state.currentSession, false);
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setMessage("", "");
+      submitButton.disabled = true;
+      submitButton.textContent = "Validando...";
+
+      try {
+        const response = await authenticate({
+          role: roleSelect.value,
+          user: userSelect.value,
+          password: $("#password").value.trim()
+        });
+
+        if (!response || !response.success) {
+          setMessage(response && response.message ? response.message : "Credenciales no validas.", "error");
+          return;
+        }
+
+        renderApp(response);
+      } catch (error) {
+        setMessage("No se pudo validar el acceso. Intente nuevamente.", "error");
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Ingresar";
+      }
+    });
+
+    loadLoginData();
+    restoreSession();
+  </script>
+</body>
+</html>
