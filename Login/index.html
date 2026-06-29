@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src &#39;self&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://app.powerbi.com https://cdnjs.cloudflare.com data: blob:; script-src &#39;self&#39; &#39;unsafe-inline&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://cdnjs.cloudflare.com; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data: https:; connect-src &#39;self&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://app.powerbi.com https://cdnjs.cloudflare.com; frame-src &#39;self&#39; https://app.powerbi.com https://docs.google.com; object-src &#39;none&#39;; base-uri &#39;self&#39;; form-action &#39;self&#39;; upgrade-insecure-requests;">
-  <title>OPAUSTRO | Inicio de sesi&oacute;n</title>
+  <title>OPAUSTRO</title>
   <link rel="icon" href="../Recuros_imagenes/icon-192.png">
   <link rel="manifest" href="../manifest.webmanifest">
   <meta name="theme-color" content="#075f9b">
@@ -272,8 +272,8 @@
     }
 
     .app-logo {
-      width: 64px;
-      height: 64px;
+      width: 108px;
+      height: 56px;
       object-fit: contain;
       border-radius: 8px;
       background: rgba(255, 255, 255, .95);
@@ -767,8 +767,8 @@
       }
 
       .app-logo {
-        width: 42px;
-        height: 42px;
+        width: 62px;
+        height: 50px;
       }
 
       .app-title small,
@@ -1252,7 +1252,7 @@
   <main class="login-screen" id="loginScreen">
     <section class="login-shell">
       <div class="brand-panel" aria-label="OPAUSTRO">
-        <img class="logo-mark" src="../Recuros_imagenes/logo_opaustro.png" alt="OPAUSTRO">
+        <img class="logo-mark" src="../Recuros_imagenes/logo_color.png" alt="OPAUSTRO">
       </div>
 
       <section class="login-card" aria-label="Inicio de sesi&oacute;n">
@@ -1301,10 +1301,10 @@
   <section class="app-screen is-hidden" id="appScreen" aria-label="M&oacute;dulos">
     <header class="app-topbar">
       <div class="app-brand">
-        <button class="menu-toggle" type="button" aria-label="Men&uacute;">â˜°</button>
-        <img class="app-logo" src="../Recuros_imagenes/icon-192.png" alt="OPAUSTRO">
+        <button class="menu-toggle" type="button" aria-label="Men&uacute;">☰</button>
+        <img class="app-logo" src="../Recuros_imagenes/logo_color.png" alt="OPAUSTRO">
         <div class="app-title">
-          <h1 id="topModuleTitle">OPAUSTRO</h1><span class="connection-status warn" id="connectionStatus" title="Estado de conexiÃ³n"><span class="status-icon">âš </span><span class="status-text">Verificando</span></span>
+          <h1 id="topModuleTitle">OPAUSTRO</h1><span class="connection-status warn" id="connectionStatus" title="Estado de conexión"><span class="status-icon">⚠</span><span class="status-text">Verificando</span></span>
         </div>
       </div>
 
@@ -1340,7 +1340,7 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '20260629-3';
+    const APP_VERSION = '20260629-4';
     let inactivityTimer = null;
 
     const MODULE_DEFINITIONS = {
@@ -1391,9 +1391,9 @@
         embed: true
       },
       Logistica: {
-        label: "LogÃ­stica",
+        label: "Logística",
         icon: "../Recuros_imagenes/inventario.png",
-        description: "Cabinets Â· Taller Â· Movimientos",
+        description: "Cabinets · Taller · Movimientos",
         path: "../Logistica/cabinets.html?embed=1",
         embed: true
       },
@@ -1411,7 +1411,7 @@
         embed: true
       },
       GerenciaRevision: {
-        label: "RevisiÃ³n Costo",
+        label: "Revisión Costo",
         symbol: "cost",
         icon: "../Recuros_imagenes/calendario.png",
         path: "../Gerencia/revision.html?embed=1",
@@ -1457,7 +1457,7 @@
       },
       {
         id: "Logistica",
-        label: "LogÃ­stica",
+        label: "Logística",
         icon: "&#128666;",
         iconPath: "../Recuros_imagenes/inventario.png",
         modules: ["Logistica"]
@@ -1532,7 +1532,7 @@
 
       if (!LOGIN_API_URL) {
         renderRoles({});
-        setMessage("Configura LOGIN_API_URL para validar usuarios reales. Por seguridad no se permite acceso local con contraseÃ±as libres.", "error");
+        setMessage("Configura LOGIN_API_URL para validar usuarios reales. Por seguridad no se permite acceso local con contraseñas libres.", "error");
         return;
       }
       callLoginApi("getLoginData", {}).then((response) => {
@@ -1632,7 +1632,7 @@
         const toggle = document.createElement("button");
         toggle.type = "button";
         toggle.className = "group-toggle";
-        toggle.innerHTML = `<span class="group-icon" aria-hidden="true">${group.icon}</span><span class="group-name">${group.label}</span><span class="group-caret">â€º</span>`;
+        toggle.innerHTML = `<span class="group-icon" aria-hidden="true">${group.icon}</span><span class="group-name">${group.label}</span><span class="group-caret">›</span>`;
         toggle.addEventListener("click", () => {
           if (!window.matchMedia("(max-width: 850px)").matches) {
             document.querySelector("#appScreen").classList.add("sidebar-expanded");
@@ -1700,7 +1700,7 @@
       const bottomModules = $("#bottomModules");
       bottomModules.innerHTML = "";
       bottomModules.classList.add("is-submenu");
-      bottomModules.appendChild(createBottomButton("MenÃº", "â†©", () => renderBottomGroups(session, visibleModules), "bottom-back"));
+      bottomModules.appendChild(createBottomButton("Menú", "↩", () => renderBottomGroups(session, visibleModules), "bottom-back"));
       group.modules.forEach((moduleName) => {
         const module = MODULE_DEFINITIONS[moduleName] || { label: moduleName, symbol: "board" };
         const icon = module.icon || (module.symbol ? (SYMBOLS[module.symbol] || "&#8226;") : (group.iconPath || group.icon || "&#8226;"));
@@ -1724,9 +1724,9 @@
       const el = $("#connectionStatus");
       if (!el) return;
       const cfg = {
-        ok: { icon: "âœ“", text: text || "Conectado" },
+        ok: { icon: "✓", text: text || "Conectado" },
         warn: { icon: "!", text: text || "Verificando" },
-        err: { icon: "Ã—", text: text || "Sin conexiÃ³n" }
+        err: { icon: "×", text: text || "Sin conexión" }
       }[status] || { icon: "!", text: text || "Verificando" };
       el.className = `connection-status ${status || "warn"}`;
       el.querySelector(".status-icon").textContent = cfg.icon;
@@ -1756,7 +1756,7 @@
       const data = event.data || {};
       if (data.type !== "opaustro-module-status") return;
       if (data.status === "ok") setConnectionStatus("ok", data.message || "Conectado");
-      else if (data.status === "err") setConnectionStatus("err", data.message || "Sin conexiÃ³n");
+      else if (data.status === "err") setConnectionStatus("err", data.message || "Sin conexión");
       else setConnectionStatus("warn", data.message || "Verificando");
     });
 
@@ -1806,10 +1806,10 @@
           frame.addEventListener("load", () => setTimeout(() => {
             if (sessionStorage.getItem(ACTIVE_MODULE_KEY) === moduleName) setConnectionStatus("ok", "Conectado");
           }, 700));
-          frame.addEventListener("error", () => setConnectionStatus("err", "Sin conexiÃ³n"));
+          frame.addEventListener("error", () => setConnectionStatus("err", "Sin conexión"));
         }
       } else {
-        panel.innerHTML = `<p>El mÃ³dulo ${module.label} estÃ¡ listo para recibir su contenido.</p>`;
+        panel.innerHTML = `<p>El módulo ${module.label} está listo para recibir su contenido.</p>`;
         setConnectionStatus("warn", "Sin base de datos");
       }
       $("#appScreen").classList.remove("sidebar-open");
@@ -1861,7 +1861,7 @@
       $("#loginScreen").classList.remove("is-hidden");
       form.reset();
       renderUsers("");
-      setMessage(expired ? "SesiÃ³n cerrada por inactividad." : "", expired ? "error" : "");
+      setMessage(expired ? "Sesión cerrada por inactividad." : "", expired ? "error" : "");
       $("#password").type = "password";
       $("#togglePassword").textContent = "Ver";
       history.replaceState({}, "", location.pathname);
@@ -1939,4 +1939,5 @@
   </script>
 </body>
 </html>
+
 
