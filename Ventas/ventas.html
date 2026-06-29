@@ -154,7 +154,8 @@ html.embed-mode,
 html.embed-mode body {
   width: 100%;
   min-width: 0;
-  overflow: auto;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 html.embed-mode .main {
@@ -166,9 +167,9 @@ html.embed-mode .main {
   html.embed-mode header {
     display: flex !important;
     height: auto;
-    min-height: 118px;
-    padding: 10px 12px 8px;
-    align-items: flex-start;
+    min-height: 82px;
+    padding: 8px 10px;
+    align-items: center;
     gap: 8px;
     flex-wrap: wrap;
     position: relative;
@@ -176,8 +177,10 @@ html.embed-mode .main {
   }
 
   html.embed-mode .h-left {
-    width: 100%;
+    flex: 1 1 250px;
+    width: auto;
     gap: 10px;
+    min-width: 0;
   }
 
   html.embed-mode .h-logo {
@@ -195,9 +198,10 @@ html.embed-mode .main {
   }
 
   html.embed-mode .h-kpis {
-    width: 100%;
+    flex: 1 1 340px;
+    width: auto;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(58px, 1fr));
     gap: 6px;
     overflow: visible;
   }
@@ -205,11 +209,6 @@ html.embed-mode .main {
   html.embed-mode .hkpi {
     min-width: 0;
     padding: 6px 4px;
-  }
-
-  html.embed-mode .hkpi:nth-child(4),
-  html.embed-mode .hkpi:nth-child(5) {
-    display: none;
   }
 
   html.embed-mode .tabs {
@@ -221,11 +220,12 @@ html.embed-mode .main {
   }
 
   html.embed-mode .main {
-    display: block;
+    display: flex;
     width: 100vw;
-    min-height: calc(100dvh - 162px);
+    flex: 1 1 auto;
+    min-height: 0;
     height: auto;
-    overflow: visible;
+    overflow: hidden;
   }
 
   html.embed-mode .sidebar {
@@ -248,15 +248,35 @@ html.embed-mode .main {
   html.embed-mode #zonaView {
     position: relative;
     width: 100vw !important;
-    height: calc(100dvh - 250px) !important;
-    min-height: 520px;
+    height: 100% !important;
+    min-height: 0;
   }
 
   html.embed-mode .filt-toggle {
     display: block;
     position: fixed;
-    top: 178px;
+    top: 134px;
     left: 12px;
+  }
+}
+
+@media (max-width: 520px), (pointer: coarse) and (max-width: 520px) {
+  html.embed-mode header {
+    min-height: 118px;
+  }
+
+  html.embed-mode .h-left {
+    flex-basis: 100%;
+  }
+
+  html.embed-mode .h-kpis {
+    flex-basis: 100%;
+    grid-template-columns: repeat(5, minmax(64px, 1fr));
+    overflow-x: auto;
+  }
+
+  html.embed-mode .filt-toggle {
+    top: 170px;
   }
 }
 
@@ -668,7 +688,6 @@ function ocultarLista(){
 let filtered = DATA.slice();
 let activeSem = null;
 let estadoCliente = {};  // cod -> estado total del cliente
-let didFitInitial = false;
 
 const map = L.map('map').setView([-1.66, -78.65], 10);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
@@ -852,10 +871,9 @@ function applyFilters(){
   // Filtros en cadena
   actualizarDropdowns(ag, pr, ve, ca, ci);
 
-  if(ci || !didFitInitial){
+  if(ci){
     const lats = filtered.map(d=>d.lat), lngs = filtered.map(d=>d.lng);
     if(lats.length) map.fitBounds([[Math.min(...lats),Math.min(...lngs)],[Math.max(...lats),Math.max(...lngs)]],{padding:[50,50]});
-    didFitInitial = true;
   }
   renderMap();
   if(document.getElementById('zonaView').style.display !== 'none') renderZonas();
@@ -1018,8 +1036,7 @@ function iniciarApp(){
   calcularOpcionesFull();
   applyFilters();
   fitEmbedMap();
-  setTimeout(() => { fitEmbedMap(); renderMap(); renderZonas(); }, 120);
-  setTimeout(() => { fitEmbedMap(); renderMap(); }, 520);
+  setTimeout(() => { fitEmbedMap(); renderZonas(); }, 100);
 }
 function toggleSidebar(){
   var sb=document.getElementById('sidebar');

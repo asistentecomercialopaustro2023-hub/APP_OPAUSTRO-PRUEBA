@@ -1139,20 +1139,19 @@
       bottom: 0;
       min-height: 82px;
       display: grid !important;
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(88px, 1fr);
+      grid-template-columns: repeat(var(--bottom-count, 3), minmax(0, 1fr));
       gap: 0;
       padding: 9px 8px calc(9px + env(safe-area-inset-bottom));
       background: #e9f6fb;
       border-top: 2px solid #075f9b;
       z-index: 25;
-      overflow-x: auto;
+      overflow-x: hidden;
       overscroll-behavior-x: contain;
       scrollbar-width: thin;
     }
 
     .app-screen.is-mobile-layout .bottom-nav .module-link {
-      min-width: 88px;
+      min-width: 0;
       min-height: 64px;
       justify-content: center;
       gap: 5px;
@@ -1177,7 +1176,7 @@
 
     .app-screen.is-mobile-layout .bottom-nav .module-link span:last-child {
       display: block;
-      max-width: 88px;
+      max-width: 100%;
       text-align: center;
     }
 
@@ -1217,7 +1216,6 @@
 
       .app-screen.is-mobile-layout .bottom-nav {
         min-height: 66px;
-        grid-auto-columns: minmax(104px, 1fr);
         padding-top: 6px;
         padding-bottom: calc(6px + env(safe-area-inset-bottom));
       }
@@ -1238,7 +1236,10 @@
 
 
     .bottom-nav.is-submenu {
-      grid-auto-columns: minmax(78px, 1fr);
+      grid-template-columns: none !important;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(82px, 1fr);
+      overflow-x: auto !important;
     }
 
     .bottom-nav .bottom-back {
@@ -1340,7 +1341,7 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '20260629-4';
+    const APP_VERSION = '20260629-5';
     let inactivityTimer = null;
 
     const MODULE_DEFINITIONS = {
@@ -1676,7 +1677,10 @@
       button.className = `module-link ${extraClass || ""}`.trim();
       if (moduleName) button.dataset.module = moduleName;
       button.innerHTML = `${renderIconMarkup(icon)}<span>${label}</span>`;
-      button.addEventListener("click", onClick);
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        onClick(event);
+      });
       return button;
     }
 
@@ -1684,7 +1688,9 @@
       const bottomModules = $("#bottomModules");
       bottomModules.innerHTML = "";
       bottomModules.classList.remove("is-submenu");
-      visibleAreaGroups(visibleModules).forEach((group) => {
+      const groups = visibleAreaGroups(visibleModules);
+      bottomModules.style.setProperty("--bottom-count", Math.max(groups.length, 1));
+      groups.forEach((group) => {
         bottomModules.appendChild(createBottomButton(group.label, group.iconPath || group.icon, () => {
           if (group.modules.length === 1) {
             activateModule(group.modules[0], session, true);
@@ -1700,6 +1706,7 @@
       const bottomModules = $("#bottomModules");
       bottomModules.innerHTML = "";
       bottomModules.classList.add("is-submenu");
+      bottomModules.style.setProperty("--bottom-count", Math.max(group.modules.length + 1, 1));
       bottomModules.appendChild(createBottomButton("Menú", "↩", () => renderBottomGroups(session, visibleModules), "bottom-back"));
       group.modules.forEach((moduleName) => {
         const module = MODULE_DEFINITIONS[moduleName] || { label: moduleName, symbol: "board" };
