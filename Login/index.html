@@ -1115,20 +1115,20 @@
     .app-screen.is-mobile-layout .module-workspace {
       width: 100vw;
       min-width: 0;
-      min-height: calc(100dvh - 86px);
-      padding-bottom: calc(96px + env(safe-area-inset-bottom));
+      min-height: calc(var(--app-height, 100dvh) - 86px);
+      padding-bottom: calc(104px + env(safe-area-inset-bottom));
     }
 
     .app-screen.is-mobile-layout .blank-panel.module-host {
       width: 100%;
-      height: calc(100dvh - 182px - env(safe-area-inset-bottom));
+      height: calc(var(--app-height, 100dvh) - 190px - env(safe-area-inset-bottom));
       overflow: hidden;
     }
 
     .app-screen.is-mobile-layout .module-frame {
       width: 100%;
       height: 100%;
-      min-height: calc(100dvh - 182px - env(safe-area-inset-bottom));
+      min-height: calc(var(--app-height, 100dvh) - 190px - env(safe-area-inset-bottom));
       display: block;
     }
 
@@ -1137,11 +1137,11 @@
       left: 0;
       right: 0;
       bottom: 0;
-      min-height: 82px;
+      min-height: 90px;
       display: grid !important;
       grid-template-columns: repeat(var(--bottom-count, 3), minmax(0, 1fr));
       gap: 0;
-      padding: 9px 8px calc(9px + env(safe-area-inset-bottom));
+      padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
       background: #e9f6fb;
       border-top: 2px solid #075f9b;
       z-index: 25;
@@ -1152,18 +1152,25 @@
 
     .app-screen.is-mobile-layout .bottom-nav .module-link {
       min-width: 0;
-      min-height: 64px;
+      width: 100%;
+      min-height: 70px;
       justify-content: center;
       gap: 5px;
       flex-direction: column;
-      font-size: .82rem;
+      font-size: .9rem;
       font-weight: 700;
       line-height: 1.12;
       padding: 5px 6px;
       white-space: normal;
       border-right: 1px solid #8ab8d0;
+      box-shadow: inset -1px 0 0 rgba(3, 56, 91, .12);
       border-radius: 0;
       background: transparent;
+    }
+
+    .app-screen.is-mobile-layout .bottom-nav .module-link:last-child {
+      border-right: 0;
+      box-shadow: none;
     }
 
     .app-screen.is-mobile-layout .bottom-nav .module-link img,
@@ -1204,26 +1211,26 @@
       }
 
       .app-screen.is-mobile-layout .module-workspace {
-        min-height: calc(100dvh - 64px);
-        padding-bottom: calc(76px + env(safe-area-inset-bottom));
+        min-height: calc(var(--app-height, 100dvh) - 64px);
+        padding-bottom: calc(86px + env(safe-area-inset-bottom));
       }
 
       .app-screen.is-mobile-layout .blank-panel.module-host,
       .app-screen.is-mobile-layout .module-frame {
-        height: calc(100dvh - 140px - env(safe-area-inset-bottom));
-        min-height: calc(100dvh - 140px - env(safe-area-inset-bottom));
+        height: calc(var(--app-height, 100dvh) - 150px - env(safe-area-inset-bottom));
+        min-height: calc(var(--app-height, 100dvh) - 150px - env(safe-area-inset-bottom));
       }
 
       .app-screen.is-mobile-layout .bottom-nav {
-        min-height: 66px;
+        min-height: 78px;
         padding-top: 6px;
         padding-bottom: calc(6px + env(safe-area-inset-bottom));
       }
 
       .app-screen.is-mobile-layout .bottom-nav .module-link {
-        min-height: 52px;
+        min-height: 62px;
         flex-direction: row;
-        font-size: .84rem;
+        font-size: .9rem;
         gap: 8px;
       }
 
@@ -1341,7 +1348,7 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '20260629-5';
+    const APP_VERSION = '20260629-6';
     let inactivityTimer = null;
 
     const MODULE_DEFINITIONS = {
@@ -1754,6 +1761,11 @@
       const mobile = shouldUseMobileLayout();
       app.classList.toggle("is-mobile-layout", mobile);
       if (!mobile) app.classList.remove("sidebar-open");
+      document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+      const frame = document.querySelector(".module-frame");
+      if (frame && frame.contentWindow) {
+        setTimeout(() => frame.contentWindow.dispatchEvent(new Event("resize")), 80);
+      }
     }
 
     window.addEventListener("resize", applyResponsiveMode);
@@ -1812,6 +1824,8 @@
         if (frame) {
           frame.addEventListener("load", () => setTimeout(() => {
             if (sessionStorage.getItem(ACTIVE_MODULE_KEY) === moduleName) setConnectionStatus("ok", "Conectado");
+            applyResponsiveMode();
+            try { frame.contentWindow.dispatchEvent(new Event("resize")); } catch (error) {}
           }, 700));
           frame.addEventListener("error", () => setConnectionStatus("err", "Sin conexión"));
         }

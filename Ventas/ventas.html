@@ -570,13 +570,15 @@ const MES_ACTUAL = 5;
 const MESES_BASE = [1,2,3,4];
 function buildData(){
   return (typeof DATA_RAW!=="undefined"?DATA_RAW:[]).map(function(d){
+    var lat=Number(d.lat), lng=Number(d.lng);
+    if(Number.isFinite(lng) && lng>0 && lng>=70 && lng<=82) lng=-lng;
     var mayo=d.v[MES_ACTUAL]||0;
     var baseVals=MESES_BASE.map(function(m){return d.v[m]||0;});
     var prom=baseVals.reduce(function(a,b){return a+b;},0)/MESES_BASE.length;
     var vp=prom>0?Math.round((mayo-prom)/prom*1000)/10:0;
     var s=vp>=15?"V":vp<=-15?"R":"A";
-    return Object.assign({},d,{s:s,abril:mayo,prom_trim:Math.round(prom*100)/100,prom2025:Math.round(prom*100)/100,var:vp});
-  });
+    return Object.assign({},d,{lat:lat,lng:lng,s:s,abril:mayo,prom_trim:Math.round(prom*100)/100,prom2025:Math.round(prom*100)/100,var:vp});
+  }).filter(function(d){return Number.isFinite(d.lat)&&Number.isFinite(d.lng)&&d.lat!==0&&d.lng!==0;});
 }
 const DATA=buildData();
 </script>
@@ -740,7 +742,7 @@ function fmt(n){
 }
 
 function renderMap(){
-  notifyHostStatus('ok','Datos conectados');
+  notifyHostStatus(filtered.length?'ok':'warn',filtered.length?'Datos conectados':'Sin puntos para mostrar');
   cluster.clearLayers();
   const markers = [];
   filtered.forEach(d => {
@@ -756,6 +758,7 @@ function renderMap(){
   });
   if (cluster.addLayers) cluster.addLayers(markers);
   else markers.forEach(m => cluster.addLayer(m));
+  setTimeout(function(){ map.invalidateSize(); }, 40);
 }
 
 function showCard(d){
@@ -1027,6 +1030,7 @@ function fitEmbedMap(){
       map.invalidateSize();
       setTimeout(function(){ map.invalidateSize(); }, 120);
       setTimeout(function(){ map.invalidateSize(); }, 420);
+      setTimeout(function(){ map.setView(map.getCenter(), map.getZoom(), {animate:false}); }, 520);
     }
   }catch(e){}
 }

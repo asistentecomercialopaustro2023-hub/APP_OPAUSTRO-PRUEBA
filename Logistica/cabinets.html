@@ -309,6 +309,7 @@ code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;
       <button id="fb-bo-a" class="fb" onclick="fBo('A',this)">Etapa A</button>
       <button id="fb-bo-b" class="fb" onclick="fBo('B',this)">Etapa B</button>
       <button id="fb-bo-c" class="fb" onclick="fBo('C',this)">Etapa C</button>
+      <button id="fb-bo-mer" class="fb" onclick="fBo('MERCADO',this)">En mercado</button>
       <button id="fb-bo-dn" class="fb" onclick="fBo('DAÑADO',this)">Dañados</button>
       <input class="fi" placeholder="Buscar placa, modelo, cliente..." oninput="sBo(this.value)">
     </div>
@@ -886,6 +887,7 @@ function hoyStr(){return new Date().toISOString().split('T')[0];}
 function fF(ts){if(!ts)return'—';var p=ts.substring(0,10).split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function dt(ts){if(!ts)return'—';try{var d=new Date(ts);return d.toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'});}catch(e){return ts;}}
 function dd(ts){if(!ts)return 0;return Math.floor((Date.now()-new Date(ts).getTime())/86400000);}
+function fechaEtapa(e){return e&&(e.tsEtapa||e.tsIngresoBodega||e.tsUltMov||e.fechaIngreso||e.ingreso||'');}
 function dBadge(ts){var d=dd(ts);var c=d<=3?'tr-ok':d<=14?'tr-wn':'tr-dn';return'<span class="tr '+c+'">'+d+'d</span>';}
 function horasDesde(ts){
   if(!ts)return null;
@@ -1516,7 +1518,7 @@ function rBod(){
     else accion='<span class="badge b-ok">✓ OK</span>'+(canEditBodega()?' <button class="btn btn-mini" style="background:var(--mt-b);color:var(--mt-c);border-color:var(--mt-c);" data-p="'+x(e.placa)+'" onclick="openFotosOK(this.dataset.p)">📷 Fotos</button>':'');
     var fotoModo=e.estado==='BODEGA_OK'?'s':e.estado==='MERCADO'?'m':'e';
     var detalle=et+(tags?'<br>'+tags:'')+(e.estado==='DAÑADO'&&e.obs?'<br><span class="dmg-note">Obs: '+x(e.obs)+'</span>':'');
-    return'<tr><td class="tp">'+x(e.placa)+'</td><td>'+x(e.modelo)+'</td><td>'+bSt(e)+'</td><td>'+detalle+'</td><td>'+(e.etapa?dBadge(e.tsEtapa):'—')+'</td><td>'+tiempoEnBodega(e)+'</td><td class="tm">'+x(e.cliente||'—')+'</td><td>'+thumbs(e.placa,fotoModo)+'</td><td><div class="dmg-actions">'+accion+'</div></td></tr>';
+    return'<tr><td class="tp">'+x(e.placa)+'</td><td>'+x(e.modelo)+'</td><td>'+bSt(e)+'</td><td>'+detalle+'</td><td>'+(e.etapa?dBadge(fechaEtapa(e)):'—')+'</td><td>'+tiempoEnBodega(e)+'</td><td class="tm">'+x(e.cliente||'—')+'</td><td>'+thumbs(e.placa,fotoModo)+'</td><td><div class="dmg-actions">'+accion+'</div></td></tr>';
   }).join('');
 }
 
@@ -1528,12 +1530,12 @@ function rMnt(){
   g('cc-mt').textContent=eq.length+' equipos';
   if(mF!=='TODOS')eq=eq.filter(function(e){return e.etapa===mF;});
   if(mS){var q=mS.toLowerCase();eq=eq.filter(function(e){return(e.placa+e.modelo).toLowerCase().indexOf(q)>=0;});}
-  eq.sort(function(a,b){return dd(b.tsEtapa)-dd(a.tsEtapa);});
+  eq.sort(function(a,b){return dd(fechaEtapa(b))-dd(fechaEtapa(a));});
   var tb=g('tb-mt');
   if(!eq.length){tb.innerHTML='<tr><td colspan="7" class="empty">Sin equipos</td></tr>';return;}
   tb.innerHTML=eq.map(function(e){
     var tags=(e.trabajos||[]).map(function(t){return'<span class="tag">'+x(t)+'</span>';}).join('');
-    return'<tr><td class="tp">'+x(e.placa)+'</td><td>'+x(e.modelo)+'</td><td>'+bEt(e.etapa)+'</td><td class="tm">'+(e.tsIngresoBodega?fF(e.tsIngresoBodega):'—')+'</td><td>'+dBadge(e.tsEtapa)+'</td><td>'+(tags||'—')+'</td><td>'+accionMantenimiento(e)+'</td></tr>';
+    return'<tr><td class="tp">'+x(e.placa)+'</td><td>'+x(e.modelo)+'</td><td>'+bEt(e.etapa)+'</td><td class="tm">'+(e.tsIngresoBodega?fF(e.tsIngresoBodega):'—')+'</td><td>'+dBadge(fechaEtapa(e))+'</td><td>'+(tags||'—')+'</td><td>'+accionMantenimiento(e)+'</td></tr>';
   }).join('');
 }
 
@@ -1906,7 +1908,7 @@ function applyRoleUI(){
 function expCSV(){
   var eq=eqArr();
   var rows=[['Placa','Modelo','Estado','Etapa','Días','Tiempo en bodega','Cliente','Trabajos']];
-  eq.forEach(function(e){var h=e.estado==='BODEGA_OK'?horasDesde(e.tsUltMov||e.tsIngresoBodega):null;rows.push([e.placa,e.modelo,e.estado,e.etapa||'',e.etapa?dd(e.tsEtapa):'',h===null?'':fmtDur(h),e.cliente||'',(e.trabajos||[]).join('|')]);});
+  eq.forEach(function(e){var h=e.estado==='BODEGA_OK'?horasDesde(e.tsUltMov||e.tsIngresoBodega):null;rows.push([e.placa,e.modelo,e.estado,e.etapa||'',e.etapa?dd(fechaEtapa(e)):'',h===null?'':fmtDur(h),e.cliente||'',(e.trabajos||[]).join('|')]);});
   if(typeof XLSX!=='undefined'){
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:10},{wch:14},{wch:12},{wch:8},{wch:12},{wch:16},{wch:24},{wch:30}];
