@@ -955,9 +955,10 @@ function iniciarApp(){
   if(yaIniciado) return;
   yaIniciado = true;
   calcularOpcionesFull();
-  renderMap();
   applyFilters();
-  setTimeout(() => { fitEmbedMap(); renderZonas(); }, 100);
+  fitEmbedMap();
+  setTimeout(() => { fitEmbedMap(); renderMap(); renderZonas(); }, 120);
+  setTimeout(() => { fitEmbedMap(); renderMap(); }, 520);
 }
 function toggleSidebar(){
   var sb=document.getElementById('sidebar');
