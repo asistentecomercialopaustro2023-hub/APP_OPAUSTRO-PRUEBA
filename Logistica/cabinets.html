@@ -742,9 +742,9 @@ code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;
     <input type="hidden" id="dc-placa">
     <input type="hidden" id="dc-plan-ts">
     <div class="fg fspan" style="margin-bottom:12px;">
-      <label>📄 Fotos del contrato <span class="req">*</span> <span style="color:var(--mut);font-weight:400;">(frontal y reverso obligatorios)</span></label>
-      <div class="foto3-counter pend" id="dc-cnt">0 / 2 fotos tomadas</div>
-      <div class="foto3-grid" style="grid-template-columns:1fr 1fr;">
+      <label>📄 Fotos del contrato <span class="req">*</span> <span style="color:var(--mut);font-weight:400;">(frontal, reverso y portada/fachada obligatorios)</span></label>
+      <div class="foto3-counter pend" id="dc-cnt">0 / 3 fotos tomadas</div>
+      <div class="foto3-grid">
         <div class="foto3-item">
           <div class="foto3-lbl">📄 Frontal</div>
           <div class="foto3-area" id="dc-area-f" onclick="document.getElementById('dc-inp-f').click()">
@@ -765,9 +765,20 @@ code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;
             <div class="foto3-check">✅</div>
           </div>
         </div>
+        <div class="foto3-item">
+          <div class="foto3-lbl">🏪 Portada / Fachada</div>
+          <div class="foto3-area" id="dc-area-l" onclick="document.getElementById('dc-inp-l').click()">
+            <input type="file" id="dc-inp-l" accept="image/jpeg,image/png,image/*" capture="environment">
+            <img class="foto3-prev" id="dc-prev-l" src="" alt="">
+            <div class="foto3-icon">📷</div>
+            <div class="foto3-txt">Portada o fachada del local</div>
+            <div class="foto3-check">✅</div>
+          </div>
+        </div>
       </div>
       <input type="hidden" id="dc-foto-f">
       <input type="hidden" id="dc-foto-r">
+      <input type="hidden" id="dc-foto-l">
     </div>
     <div class="ts-box">
       <span style="font-size:18px;">🕐</span>
@@ -994,7 +1005,8 @@ function actualizarCnt(prefix) {
 
 function vistas(prefix) {
   if(prefix==='ce') return ['f','t','i','p'];
-  if(prefix==='dc'||prefix==='ct') return ['f','r'];
+  if(prefix==='dc') return ['f','r','l'];
+  if(prefix==='ct') return ['f','r'];
   return ['f','t','i'];
 }
 
@@ -1059,6 +1071,7 @@ function thumbs(placa, modo) {
     var fc=eq.fotosContrato||{};
     if(fc.f) out+=thumbImg(fc.f,'Contrato Frontal — '+placa,'CF');
     if(fc.r) out+=thumbImg(fc.r,'Contrato Reverso — '+placa,'CR');
+    if(fc.l) out+=thumbImg(fc.l,'Portada/Fachada local — '+placa,'PL');
   }
   if(modo==='s'||modo==='b'){
     var fs=eq.fotosSalida||{};
@@ -1512,6 +1525,7 @@ function rMov(){
     var fotosCont='';
     if(fc.f)fotosCont+=thumbImg(fc.f,'Contrato Frontal — '+m.placa,'CF');
     if(fc.r)fotosCont+=thumbImg(fc.r,'Contrato Reverso — '+m.placa,'CR');
+    if(fc.l)fotosCont+=thumbImg(fc.l,'Portada/Fachada local — '+m.placa,'PL');
     if(!fotosCont)fotosCont='<span style="color:var(--mut);font-size:11px;">Sin fotos</span>';
     if(canEditBodega())fotosCont+=' <button class="btn btn-mini" style="background:var(--c-b);color:var(--c-c);border-color:var(--c-c);vertical-align:middle;" data-p="'+x(m.placa)+'" data-ts="'+x(m.ts)+'" onclick="openEditarContrato(this.dataset.p,this.dataset.ts)">'+(hasFc?'✎':'📷 Subir')+'</button>';
     var esHoy=(m.ts||'').substring(0,10)===hoy;
@@ -1578,7 +1592,7 @@ function closeDespacho(){
   resetFotos3('dc');
 }
 async function confirmarDespacho(){
-  if(!validarFotos3('dc')){toast('Toma las 2 fotos del contrato (frontal y reverso)','err');return;}
+  if(!validarFotos3('dc')){toast('Falta completar fotos obligatorias: frontal, reverso y portada/fachada del local','err');return;}
   var placa=g('dc-placa').value;
   var planTs=g('dc-plan-ts').value;
   var fotosContrato=getFotos3('dc');

@@ -444,6 +444,88 @@
   .tg-sel-card .tsc-desc{font-size:11px;color:rgba(255,255,255,.6);margin-top:5px;}
   .tg-sel-footer{text-align:center;margin-top:26px;font-size:10px;color:rgba(255,255,255,.22);}
   @media(max-width:760px){.tg-sel-bg{overflow:auto}.tg-sel-wrap{max-width:420px}.tg-sel-grid{grid-template-columns:1fr;}}
+
+
+  /* Embed/mobile: full-width content inside the main OPAUSTRO app. */
+  html.embed-mode,
+  html.embed-mode body {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    background: var(--gray1);
+  }
+
+  html.embed-mode #filtros {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  html.embed-mode #tabs-bar {
+    padding: 0 8px;
+    scrollbar-width: thin;
+  }
+
+  html.embed-mode #content {
+    width: 100%;
+    max-width: none;
+    padding: 14px 12px 92px;
+  }
+
+  html.embed-mode .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 10px;
+  }
+
+  html.embed-mode .table-wrap {
+    max-width: 100%;
+  }
+
+  @media (max-width: 850px), (pointer: coarse) {
+    html.embed-mode body {
+      font-size: 13px;
+    }
+
+    html.embed-mode #filtros {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: end;
+    }
+
+    html.embed-mode .filtro-group select,
+    html.embed-mode #btn-limpiar {
+      width: 100%;
+      min-width: 0;
+    }
+
+    html.embed-mode #tabs-bar {
+      gap: 0;
+    }
+
+    html.embed-mode .tab-btn {
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+
+    html.embed-mode .section-title {
+      font-size: .98rem;
+      line-height: 1.25;
+    }
+
+    html.embed-mode .kpi-card {
+      padding: 14px 12px;
+    }
+
+    html.embed-mode .kpi-value {
+      font-size: 1.22rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    html.embed-mode #filtros {
+      grid-template-columns: 1fr;
+    }
+  }
+
 </style>
 
 <script>
@@ -864,6 +946,15 @@ const ARCHIVO_XLSX = 'TABLERO.xlsx';
 const ARCHIVO_TALENTO = 'TALENTO HUMANO.xlsx';
 let WB_TALENTO = null;
 
+
+function notifyHostStatus(status, message){
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type:'opaustro-module-status', status:status, message:message || '' }, '*');
+    }
+  } catch(e) {}
+}
+
 async function cargarDesdeServidor(){
   if(location.protocol === 'file:'){
     const est=document.getElementById('estado-carga') || document.getElementById('estadoCarga');
@@ -897,6 +988,7 @@ async function cargarDesdeServidor(){
     poblarFiltros();
     const est = $('estado-carga');
     if(est) est.style.display = 'none';
+    notifyHostStatus('ok','Datos conectados');
     switchTab(activeTab);
   } catch(err){
     const est = $('estado-carga');
