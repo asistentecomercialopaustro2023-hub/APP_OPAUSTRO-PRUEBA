@@ -1,0 +1,12 @@
+{
+  "app": "OPAUSTRO",
+  "version": "20260629-8",
+  "label": "OPAUSTRO PRUEBA 20260629-8",
+  "channel": "prueba",
+  "publishedAt": "2026-06-29",
+  "notes": [
+    "Mapa de ventas restaurado con clusters y detalle del HTML inicial.",
+    "Restauración de última pantalla durante la ventana de sesión activa.",
+    "Estructura base para versionado y rollback."
+  ]
+}

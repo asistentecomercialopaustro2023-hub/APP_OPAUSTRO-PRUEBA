@@ -1350,6 +1350,8 @@
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
     const APP_VERSION = '20260629-8';
+    const APP_RELEASE = 'OPAUSTRO PRUEBA 20260629-8';
+    const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
 
     function readStored(key) {
@@ -1365,6 +1367,25 @@
     function removeStored(key) {
       try { localStorage.removeItem(key); } catch (error) {}
       try { sessionStorage.removeItem(key); } catch (error) {}
+    }
+
+    async function checkReleaseVersion() {
+      try {
+        const response = await fetch("../VERSION.json?v=" + Date.now(), { cache: "no-store" });
+        if (!response.ok) return;
+        const release = await response.json();
+        const current = release && release.version ? String(release.version) : APP_RELEASE;
+        const stored = readStored(RELEASE_KEY);
+        if (stored && stored !== current) {
+          const message = "Hay una nueva versión de OPAUSTRO disponible. Pulsa Aceptar para actualizar.";
+          if (confirm(message)) {
+            writeStored(RELEASE_KEY, current);
+            location.replace(location.pathname + "?v=" + encodeURIComponent(current) + location.hash);
+            return;
+          }
+        }
+        writeStored(RELEASE_KEY, current);
+      } catch (error) {}
     }
 
     const MODULE_DEFINITIONS = {
@@ -1978,6 +1999,7 @@
 
     loadLoginData();
     restoreSession();
+    checkReleaseVersion();
   </script>
 </body>
 </html>
