@@ -1349,8 +1349,23 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '20260629-7';
+    const APP_VERSION = '20260629-8';
     let inactivityTimer = null;
+
+    function readStored(key) {
+      try { return localStorage.getItem(key) || sessionStorage.getItem(key); }
+      catch (error) { try { return sessionStorage.getItem(key); } catch (inner) { return null; } }
+    }
+
+    function writeStored(key, value) {
+      try { localStorage.setItem(key, value); } catch (error) {}
+      try { sessionStorage.setItem(key, value); } catch (error) {}
+    }
+
+    function removeStored(key) {
+      try { localStorage.removeItem(key); } catch (error) {}
+      try { sessionStorage.removeItem(key); } catch (error) {}
+    }
 
     const MODULE_DEFINITIONS = {
       Admin: {
@@ -1793,15 +1808,16 @@
       state.visibleModules = visibleModules;
       renderModuleGroups(session, visibleModules);
 
-      const savedModule = sessionStorage.getItem(ACTIVE_MODULE_KEY);
+      const savedModule = readStored(ACTIVE_MODULE_KEY);
       const firstModule = visibleModules.includes(savedModule) ? savedModule : visibleModules[0];
       if (firstModule) activateModule(firstModule, session, false);
+      if (firstModule) history.replaceState({ moduleName: firstModule }, "", "#" + encodeURIComponent(firstModule));
       resetIdleTimer();
     }
 
     function activateModule(moduleName, session, pushHistory) {
       const module = MODULE_DEFINITIONS[moduleName] || { label: moduleName };
-      const currentModule = sessionStorage.getItem(ACTIVE_MODULE_KEY);
+      const currentModule = readStored(ACTIVE_MODULE_KEY);
       const existingFrame = $("#blankPanel .module-frame");
       if (currentModule === moduleName && existingFrame) {
         $("#appScreen").classList.remove("sidebar-open");
@@ -1814,7 +1830,7 @@
       $("#activeModuleTitle").textContent = module.label;
       $("#topModuleTitle").textContent = module.label;
       $("#activeModuleMode").textContent = session.permissions === "lectura" ? "Solo lectura" : "Acceso autorizado";
-      sessionStorage.setItem(ACTIVE_MODULE_KEY, moduleName);
+      writeStored(ACTIVE_MODULE_KEY, moduleName);
       setConnectionStatus(module.embed ? "warn" : "warn", module.embed ? "Conectando" : "Sin base de datos");
       const panel = $("#blankPanel");
       panel.classList.toggle("module-host", !!module.embed);
@@ -1824,7 +1840,7 @@
         const frame = panel.querySelector("iframe");
         if (frame) {
           frame.addEventListener("load", () => setTimeout(() => {
-            if (sessionStorage.getItem(ACTIVE_MODULE_KEY) === moduleName) setConnectionStatus("ok", "Conectado");
+            if (readStored(ACTIVE_MODULE_KEY) === moduleName) setConnectionStatus("ok", "Conectado");
             applyResponsiveMode();
             try { frame.contentWindow.dispatchEvent(new Event("resize")); } catch (error) {}
           }, 700));
@@ -1840,7 +1856,7 @@
     }
 
     function persistSession(session) {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      writeStored(SESSION_KEY, JSON.stringify({
         session,
         lastActivity: Date.now()
       }));
@@ -1848,7 +1864,7 @@
 
     function restoreSession() {
       try {
-        const raw = sessionStorage.getItem(SESSION_KEY);
+        const raw = readStored(SESSION_KEY);
         if (!raw) return false;
         const saved = JSON.parse(raw);
         if (!saved.session || Date.now() - Number(saved.lastActivity || 0) > SESSION_TIMEOUT_MS) {
@@ -1876,8 +1892,8 @@
     function logout(expired) {
       state.currentSession = null;
       clearTimeout(inactivityTimer);
-      sessionStorage.removeItem(SESSION_KEY);
-      sessionStorage.removeItem(ACTIVE_MODULE_KEY);
+      removeStored(SESSION_KEY);
+      removeStored(ACTIVE_MODULE_KEY);
       $("#appScreen").classList.add("is-hidden");
       $("#appScreen").classList.remove("sidebar-open");
       $("#loginScreen").classList.remove("is-hidden");
@@ -1925,8 +1941,12 @@
 
     window.addEventListener("popstate", (event) => {
       if (!state.currentSession) return;
-      const moduleName = event.state && event.state.moduleName;
-      if (moduleName) activateModule(moduleName, state.currentSession, false);
+      const storedModule = readStored(ACTIVE_MODULE_KEY);
+      const moduleName = (event.state && event.state.moduleName) || storedModule;
+      if (moduleName) {
+        activateModule(moduleName, state.currentSession, false);
+        history.replaceState({ moduleName }, "", "#" + encodeURIComponent(moduleName));
+      }
     });
 
     form.addEventListener("submit", async (event) => {

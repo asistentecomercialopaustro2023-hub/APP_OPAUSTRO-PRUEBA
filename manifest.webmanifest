@@ -1,7 +1,7 @@
 {
   "name": "OPAUSTRO",
   "short_name": "OPAUSTRO",
-  "version": "20260629-7",
+  "version": "20260629-8",
   "description": "Sistema corporativo OPAUSTRO",
   "start_url": "./Login/index.html",
   "scope": "./",

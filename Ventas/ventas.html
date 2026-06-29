@@ -10,7 +10,10 @@
 <title>Opaustro - Mapa de Ventas</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <style>
 :root{--bg:#0f1729;--panel:#1a2438;--panel2:#141d30;--border:#2a3651;--accent:#3b82f6;--accent2:#60a5fa;--V:#22c55e;--R:#ef4444;--A:#eab308;--text:#e2e8f0;--muted:#94a3b8;--font:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace;}
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -691,7 +694,7 @@ let filtered = DATA.slice();
 let activeSem = null;
 let estadoCliente = {};  // cod -> estado total del cliente
 
-const map = L.map('map', {preferCanvas:true}).setView([-1.66, -78.65], 10);
+const map = L.map('map').setView([-1.66, -78.65], 10);
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
   {attribution:'&copy; OpenStreetMap &amp; CartoDB', subdomains:'abcd', maxZoom:19}).addTo(map);
 
@@ -718,9 +721,16 @@ function clusterIcon(clusterObj){
   });
 }
 
-const canvasRenderer = L.canvas({padding:0.5});
-let pointLayer = L.layerGroup();
-map.addLayer(pointLayer);
+let cluster = (L.markerClusterGroup ? L.markerClusterGroup({
+  maxClusterRadius: 60,
+  iconCreateFunction: clusterIcon,
+  chunkedLoading: true,
+  chunkInterval: 100,
+  chunkDelay: 30,
+  removeOutsideVisibleBounds: true,
+  animate: false
+}) : L.layerGroup());
+map.addLayer(cluster);
 
 function mkIcon(s){
   const c = COLS[s] || '#94a3b8';
@@ -745,21 +755,11 @@ function notifyHostStatus(status, message){
 
 function renderMap(){
   notifyHostStatus(filtered.length?'ok':'warn',filtered.length?'Datos conectados':'Sin puntos para mostrar');
-  pointLayer.clearLayers();
+  cluster.clearLayers();
   const markers = [];
   filtered.forEach(d => {
     const est = estadoCliente[d.cod] || d.s;
-    const color = COLS[est] || '#94a3b8';
-    const m = L.circleMarker([d.lat, d.lng], {
-      renderer: canvasRenderer,
-      radius: 5,
-      color: '#ffffff',
-      weight: 1.5,
-      fillColor: color,
-      fillOpacity: 0.85,
-      opacity: 0.95,
-      sem: est
-    });
+    const m = L.marker([d.lat, d.lng], {icon: mkIcon(est), sem: est});
     const sg = d.var >= 0 ? '+' : '';
     m.bindTooltip(
       `<div class="tt"><b>${d.n}</b>${d.c} · ${d.can}<br>Mayo: ${fmt(d.abril)} | Prom.Ene-Abr: ${fmt(d.prom_trim)}<br>Variación: ${sg}${d.var}%</div>`,
@@ -768,7 +768,8 @@ function renderMap(){
     m.on('click', () => showCard(d));
     markers.push(m);
   });
-  markers.forEach(m => pointLayer.addLayer(m));
+  if(cluster.addLayers) cluster.addLayers(markers);
+  else markers.forEach(m => cluster.addLayer(m));
   setTimeout(function(){ map.invalidateSize(); }, 40);
 }
 
