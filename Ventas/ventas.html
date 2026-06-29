@@ -734,6 +734,15 @@ function fmt(n){
   return '$' + parseFloat(n).toLocaleString('es-EC', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
+function notifyHostStatus(status, message){
+  try{
+    if(window.parent && window.parent !== window){
+      var target = window.location.origin && window.location.origin !== 'null' ? window.location.origin : '*';
+      window.parent.postMessage({type:'opaustro-module-status', status:status, message:message}, target);
+    }
+  }catch(e){}
+}
+
 function renderMap(){
   notifyHostStatus(filtered.length?'ok':'warn',filtered.length?'Datos conectados':'Sin puntos para mostrar');
   pointLayer.clearLayers();
