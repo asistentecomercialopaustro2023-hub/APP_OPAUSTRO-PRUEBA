@@ -1230,6 +1230,17 @@
       }
     }
 
+
+
+    .bottom-nav.is-submenu {
+      grid-auto-columns: minmax(78px, 1fr);
+    }
+
+    .bottom-nav .bottom-back {
+      color: var(--brand-dark);
+      background: rgba(7,95,155,.08);
+    }
+
   </style>
 </head>
 <body>
@@ -1324,6 +1335,7 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
+    const APP_VERSION = '20260629-2';
     let inactivityTimer = null;
 
     const MODULE_DEFINITIONS = {
@@ -1523,6 +1535,7 @@
       const response = await fetch(LOGIN_API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
+        cache: "no-store",
         body: JSON.stringify({ action, payload })
       });
       if (!response.ok) throw new Error("No se pudo contactar el servicio de Login.");
@@ -1624,7 +1637,54 @@
         sideModules.appendChild(wrapper);
       });
 
-      visibleModules.forEach((moduleName) => bottomModules.appendChild(createModuleButton(moduleName, session)));
+      renderBottomGroups(session, visibleModules);
+    }
+
+    function visibleAreaGroups(visibleModules) {
+      return AREA_GROUPS.map((group) => ({
+        ...group,
+        modules: group.modules.filter((moduleName) => visibleModules.includes(moduleName))
+      })).filter((group) => group.modules.length);
+    }
+
+    function createBottomButton(label, icon, onClick, extraClass) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `module-link ${extraClass || ""}`.trim();
+      button.innerHTML = `<span class="module-symbol" aria-hidden="true">${icon}</span><span>${label}</span>`;
+      button.addEventListener("click", onClick);
+      return button;
+    }
+
+    function renderBottomGroups(session, visibleModules) {
+      const bottomModules = $("#bottomModules");
+      bottomModules.innerHTML = "";
+      bottomModules.classList.remove("is-submenu");
+      visibleAreaGroups(visibleModules).forEach((group) => {
+        bottomModules.appendChild(createBottomButton(group.label, group.icon, () => {
+          if (group.modules.length === 1) {
+            activateModule(group.modules[0], session, true);
+            renderBottomGroups(session, visibleModules);
+            return;
+          }
+          renderBottomSubmenu(session, visibleModules, group);
+        }));
+      });
+    }
+
+    function renderBottomSubmenu(session, visibleModules, group) {
+      const bottomModules = $("#bottomModules");
+      bottomModules.innerHTML = "";
+      bottomModules.classList.add("is-submenu");
+      bottomModules.appendChild(createBottomButton("Menú", "↩", () => renderBottomGroups(session, visibleModules), "bottom-back"));
+      group.modules.forEach((moduleName) => {
+        const module = MODULE_DEFINITIONS[moduleName] || { label: moduleName, symbol: "board" };
+        const icon = module.symbol ? (SYMBOLS[module.symbol] || "•") : (group.icon || "•");
+        bottomModules.appendChild(createBottomButton(module.label, icon, () => {
+          activateModule(moduleName, session, true);
+          renderBottomGroups(session, visibleModules);
+        }));
+      });
     }
 
 
@@ -1678,6 +1738,7 @@
       $("#sessionRole").textContent = session.role === "admin" ? "Administrador" : session.role;
 
       const visibleModules = expandModules(session.modules);
+      state.visibleModules = visibleModules;
       renderModuleGroups(session, visibleModules);
 
       const savedModule = sessionStorage.getItem(ACTIVE_MODULE_KEY);
@@ -1699,7 +1760,7 @@
       const panel = $("#blankPanel");
       panel.classList.toggle("module-host", !!module.embed);
       if (module.embed) {
-        const src = module.path + (module.path.includes("?") ? "&" : "?") + "v=" + Date.now();
+        const src = module.path + (module.path.includes("?") ? "&" : "?") + "v=" + APP_VERSION;
         panel.innerHTML = `<iframe class="module-frame" src="${src}" title="${module.label}" loading="eager"></iframe>`;
         const frame = panel.querySelector("iframe");
         if (frame) {

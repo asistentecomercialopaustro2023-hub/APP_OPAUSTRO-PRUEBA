@@ -151,6 +151,12 @@ code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;
 .foto-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
 .foto-prev{width:100%;max-height:150px;object-fit:cover;border-radius:var(--rs);margin-top:8px;display:none;}
 .foto-prev.on{display:block;}
+
+.cam-box{display:grid;gap:10px;}
+.cam-video{width:100%;max-height:52vh;background:#050913;border-radius:var(--rs);object-fit:cover;border:1px solid var(--brd);}
+.cam-actions{display:flex;gap:8px;}
+.cam-actions .btn{flex:1;}
+
 .thumb{width:44px;height:44px;object-fit:cover;border-radius:4px;cursor:pointer;border:2px solid var(--brd);margin:1px;}
 .thumb:hover{border-color:var(--acc);}
 .lb-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:900;display:none;align-items:center;justify-content:center;padding:20px;}
@@ -747,8 +753,7 @@ code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;
       <div class="foto3-grid">
         <div class="foto3-item">
           <div class="foto3-lbl">📄 Frontal</div>
-          <div class="foto3-area" id="dc-area-f" onclick="document.getElementById('dc-inp-f').click()">
-            <input type="file" id="dc-inp-f" accept="image/jpeg,image/png,image/*" capture="environment">
+          <div class="foto3-area" id="dc-area-f" onclick="openCameraCapture('dc','f')">
             <img class="foto3-prev" id="dc-prev-f" src="" alt="">
             <div class="foto3-icon">📷</div>
             <div class="foto3-txt">Frente del contrato</div>
@@ -757,8 +762,7 @@ code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;
         </div>
         <div class="foto3-item">
           <div class="foto3-lbl">📄 Reverso</div>
-          <div class="foto3-area" id="dc-area-r" onclick="document.getElementById('dc-inp-r').click()">
-            <input type="file" id="dc-inp-r" accept="image/jpeg,image/png,image/*" capture="environment">
+          <div class="foto3-area" id="dc-area-r" onclick="openCameraCapture('dc','r')">
             <img class="foto3-prev" id="dc-prev-r" src="" alt="">
             <div class="foto3-icon">📷</div>
             <div class="foto3-txt">Reverso del contrato</div>
@@ -767,8 +771,7 @@ code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;
         </div>
         <div class="foto3-item">
           <div class="foto3-lbl">🏪 Portada / Fachada</div>
-          <div class="foto3-area" id="dc-area-l" onclick="document.getElementById('dc-inp-l').click()">
-            <input type="file" id="dc-inp-l" accept="image/jpeg,image/png,image/*" capture="environment">
+          <div class="foto3-area" id="dc-area-l" onclick="openCameraCapture('dc','l')">
             <img class="foto3-prev" id="dc-prev-l" src="" alt="">
             <div class="foto3-icon">📷</div>
             <div class="foto3-txt">Portada o fachada del local</div>
@@ -833,6 +836,21 @@ code{font-family:monospace;font-size:11px;background:var(--brd);padding:1px 5px;
   </div>
 </div>
 
+
+<div class="mbg" id="modal-camera">
+  <div class="modal" style="max-width:520px;">
+    <div class="mh"><h2 id="cam-title">📷 Tomar foto</h2><button class="mc" onclick="closeCameraCapture()">✕</button></div>
+    <div class="cam-box">
+      <video class="cam-video" id="cam-video" autoplay playsinline muted></video>
+      <canvas id="cam-canvas" style="display:none"></canvas>
+      <div class="cam-actions">
+        <button class="btn btn-ok" type="button" onclick="captureCameraPhoto()">📷 Capturar foto</button>
+        <button class="btn" type="button" onclick="closeCameraCapture()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="lb-bg" id="lb" onclick="closeLB()">
   <button class="lb-close">✕</button>
   <img class="lb-img" id="lb-img" src="" alt="">
@@ -853,6 +871,13 @@ var SI={};
 
 function g(id){return document.getElementById(id);}
 function setS(v){g('slbl').innerHTML=v;}
+function notifyHostStatus(status, message){
+  try{
+    if(window.parent && window.parent !== window){
+      window.parent.postMessage({type:'opaustro-module-status',status:status,message:message||''},'*');
+    }
+  }catch(e){}
+}
 function saveL(){localStorage.setItem(SK,JSON.stringify(DB));}
 function eqArr(){return Object.values(DB.equipos);}
 function x(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -967,6 +992,59 @@ function comprimirFoto(file, cb, errCb) {
   } catch(e) {
     cargarConImage();
   }
+}
+
+
+var _cameraState={stream:null,prefix:'',vista:''};
+var CAM_LABELS={f:'frontal del contrato',r:'reverso del contrato',l:'portada o fachada del local'};
+async function openCameraCapture(prefix, vista){
+  if(prefix!=='dc'){
+    var inp=g(prefix+'-inp-'+vista); if(inp) inp.click();
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast('La cámara no está disponible en este dispositivo o navegador','err');
+    return;
+  }
+  _cameraState.prefix=prefix; _cameraState.vista=vista;
+  var title=g('cam-title'); if(title) title.textContent='📷 Tomar foto: '+(CAM_LABELS[vista]||'evidencia');
+  g('modal-camera').classList.add('on');
+  try{
+    _cameraState.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    var video=g('cam-video');
+    video.srcObject=_cameraState.stream;
+    await video.play();
+  }catch(e){
+    closeCameraCapture();
+    toast('No se pudo abrir la cámara. Revisa permisos del dispositivo.','err');
+  }
+}
+function closeCameraCapture(){
+  if(_cameraState.stream){
+    _cameraState.stream.getTracks().forEach(function(t){t.stop();});
+  }
+  _cameraState={stream:null,prefix:'',vista:''};
+  var video=g('cam-video'); if(video) video.srcObject=null;
+  var m=g('modal-camera'); if(m) m.classList.remove('on');
+}
+function captureCameraPhoto(){
+  var video=g('cam-video'), canvas=g('cam-canvas');
+  if(!video || !canvas || !video.videoWidth){ toast('La cámara aún no está lista','warn'); return; }
+  var max=1200, w=video.videoWidth, h=video.videoHeight;
+  if(w>h && w>max){ h=Math.round(h*max/w); w=max; }
+  if(h>=w && h>max){ w=Math.round(w*max/h); h=max; }
+  canvas.width=w; canvas.height=h;
+  canvas.getContext('2d').drawImage(video,0,0,w,h);
+  var data=canvas.toDataURL('image/jpeg',0.78);
+  var prefix=_cameraState.prefix, vista=_cameraState.vista;
+  if(prefix && vista){
+    g(prefix+'-foto-'+vista).value=data;
+    var prev=g(prefix+'-prev-'+vista); if(prev){prev.src=data;prev.classList.add('on');}
+    var area=g(prefix+'-area-'+vista); if(area){area.classList.add('done');area.style.opacity='1';}
+    actualizarCnt(prefix);
+    toast('✅ Foto tomada','ok');
+  }
+  closeCameraCapture();
 }
 
 var _capInProgress={};
@@ -1182,18 +1260,20 @@ function init(){
 
 async function loadData(){
   setS('⏳ Sync...');
+  notifyHostStatus('warn','Sincronizando');
   try{
     var r=await fetch(AURL+'?action=getAll'+apiKeyParam(),{redirect:'follow'});
     var d=await r.json();
     if(d.db){
       DB=d.db;
       if(d.usuarios&&d.usuarios.length){DB.usuarios=d.usuarios;}
-      saveL();rAll();llenarUsuariosLogin();setS('✅ '+hora());return;
+      saveL();rAll();llenarUsuariosLogin();setS('✅ '+hora());notifyHostStatus('ok','Datos conectados');return;
     }
     throw new Error(d.error||'sin datos');
   }
   catch(e){
     setS('❌ Error sync');
+    notifyHostStatus('err','Sin conexión a datos');
     toast('No se pudo sincronizar con Google Sheets','err');
   }
 }
@@ -1592,7 +1672,7 @@ function closeDespacho(){
   resetFotos3('dc');
 }
 async function confirmarDespacho(){
-  if(!validarFotos3('dc')){toast('Falta completar fotos obligatorias: frontal, reverso y portada/fachada del local','err');return;}
+  if(!validarFotos3('dc')){toast('Debes tomar en este momento las 3 fotos obligatorias: frontal, reverso y portada/fachada del local','err');return;}
   var placa=g('dc-placa').value;
   var planTs=g('dc-plan-ts').value;
   var fotosContrato=getFotos3('dc');
