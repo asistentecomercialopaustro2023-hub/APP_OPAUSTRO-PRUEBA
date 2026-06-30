@@ -32,7 +32,7 @@ if(new URLSearchParams(location.search).get('embed')==='1') document.documentEle
 </div>
 <div class="frame">
   <div class="loading" id="loading">Cargando tablero...</div>
-  <iframe id="frame" title="BI Ventas Power BI" allowfullscreen src="https://app.powerbi.com/view?r=eyJrIjoiMWQwNGVjZTktOTRmNS00MTg1LThhMDItYTE5NjY2MDMzODU1IiwidCI6IjYzNDBhYjFkLTM0OWQtNDUyNS1iMTg1LWY4YjZiM2YzNjM1ZCIsImMiOjR9&embedImagePlaceholder=true&pageName=472891f7463692af2e2a"></iframe>
+<iframe id="frame" title="BI Ventas Power BI" allowfullscreen loading="eager" src="https://app.powerbi.com/view?r=eyJrIjoiZDcxNzk2ODktYmRkNS00ZGYzLWE5N2MtNGM3MjY4ZjZhMmFlIiwidCI6IjYzNDBhYjFkLTM0OWQtNDUyNS1iMTg1LWY4YjZiM2YzNjM1ZCIsImMiOjR9"></iframe>
 </div>
 <script>
 document.getElementById('frame').onload=function(){var l=document.getElementById('loading');if(l)l.style.display='none';};
