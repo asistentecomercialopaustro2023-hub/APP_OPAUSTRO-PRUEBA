@@ -41,6 +41,7 @@ function doPost(e) {
 function handleAction_(body) {
   const action = String(body.action || '').trim();
   if (action === 'login') return json_(login_(body));
+  if (action === 'principalLogin') return json_(principalLogin_(body));
 
   const session = requireSession_(body.token);
   const actions = {
@@ -118,6 +119,27 @@ function login_(body) {
   });
   if (!user) throw new Error('Usuario o contraseña incorrecta.');
 
+  return createIceSession_(user);
+}
+
+function principalLogin_(body) {
+  const usuario = text_(body.usuario);
+  const requestedRole = role_(body.rol);
+  const principal = text_(body.principal);
+  const issuedAt = Number(body.issuedAt || 0);
+  const ageMs = Math.abs(Date.now() - issuedAt);
+  if (principal !== 'OPAUSTRO_LOGIN' || !usuario || !requestedRole || !issuedAt || ageMs > 10 * 60 * 1000) {
+    throw new Error('No se pudo validar la sesión principal. Inicia sesión nuevamente.');
+  }
+
+  const user = rows_(requiredLoginSheet_()).find(row => {
+    return equals_(row.Usuario, usuario) && role_(row.Rol) === requestedRole && !isInactive_(row.Activo);
+  });
+  if (!user) throw new Error('Usuario sin acceso activo a ICE.');
+  return createIceSession_(user);
+}
+
+function createIceSession_(user) {
   const token = Utilities.getUuid() + Utilities.getUuid();
   const session = {
     usuario: text_(user.Usuario),

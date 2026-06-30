@@ -1139,6 +1139,20 @@
       display: block;
     }
 
+    .app-screen.is-mobile-layout .app-topbar,
+    .app-screen.is-mobile-layout .bottom-nav {
+      flex-shrink: 0;
+      touch-action: manipulation;
+      overscroll-behavior: contain;
+      transform: translateZ(0);
+    }
+
+    .app-screen.is-mobile-layout .module-workspace,
+    .app-screen.is-mobile-layout .blank-panel.module-host {
+      overflow: hidden;
+      overscroll-behavior: contain;
+    }
+
     .app-screen.is-mobile-layout .bottom-nav {
       position: fixed;
       left: 0;
@@ -1578,8 +1592,9 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.1.5';
-    const APP_RELEASE = 'OPAUSTRO v1.1';
+    const APP_VERSION = '1.2.0';
+    const APP_RELEASE = 'OPAUSTRO v1.2';
+    const APP_RELEASE_KEY = '1.2';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
     let icePreparationPromise = null;
@@ -1609,7 +1624,13 @@
         window.navigator.standalone === true;
     }
 
-    function showUpdatePrompt(release, current, autoUpdate) {
+    function releaseKeyOf(release, current) {
+      const raw = String((release && (release.releaseKey || release.channelVersion)) || current || APP_VERSION || APP_RELEASE_KEY);
+      const match = raw.match(/\d+(?:\.\d+)?/);
+      return match ? match[0] : raw;
+    }
+
+    function showUpdatePrompt(release, current, releaseKey, autoUpdate) {
       const previous = escapeHtml(readStored(RELEASE_KEY) || "versión anterior");
       const label = escapeHtml(release && release.label ? release.label : APP_RELEASE);
       const publishedAt = escapeHtml(release && release.publishedAt ? release.publishedAt : "");
@@ -1644,12 +1665,12 @@
       const laterButton = overlay.querySelector(".update-later");
       const nowButton = overlay.querySelector(".update-now");
       if (autoUpdate) {
-        performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton, keepSession: true });
+        performUpdateInstall({ current, releaseKey, progress, progressBar, progressLabel, laterButton, nowButton, keepSession: true });
         return;
       }
       const closePrompt = () => overlay.remove();
       laterButton.addEventListener("click", closePrompt);
-      nowButton.addEventListener("click", () => performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton, keepSession: false }));
+      nowButton.addEventListener("click", () => performUpdateInstall({ current, releaseKey, progress, progressBar, progressLabel, laterButton, nowButton, keepSession: false }));
     }
 
     function updateInstallProgress(progressBar, progressLabel, percent, message) {
@@ -1685,7 +1706,7 @@
       }
     }
 
-    async function performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton, keepSession }) {
+    async function performUpdateInstall({ current, releaseKey, progress, progressBar, progressLabel, laterButton, nowButton, keepSession }) {
       if (laterButton) laterButton.disabled = true;
       if (nowButton) {
         nowButton.disabled = true;
@@ -1715,7 +1736,7 @@
       }
       await warmAppShell(current, progressBar, progressLabel);
       updateInstallProgress(progressBar, progressLabel, 100, "Actualizado. Espere un momento");
-      writeStored(RELEASE_KEY, current);
+      writeStored(RELEASE_KEY, releaseKey || releaseKeyOf(null, current));
       await wait(1400);
       const target = location.pathname + "?v=" + encodeURIComponent(current) + "&t=" + Date.now();
       location.replace(target);
@@ -1726,13 +1747,15 @@
         const response = await fetch("../VERSION.json?v=" + Date.now(), { cache: "no-store" });
         if (!response.ok) return;
         const release = await response.json();
-        const current = release && release.version ? String(release.version) : APP_RELEASE;
+        const current = release && release.version ? String(release.version) : APP_VERSION;
+        const releaseKey = releaseKeyOf(release, current);
         const stored = readStored(RELEASE_KEY);
-        if (stored && stored !== current) {
-          showUpdatePrompt(release, current, !isInstalledApp());
+        const forced = release && (release.forceUpdate === true || release.rollback === true);
+        if (stored && (stored !== releaseKey || forced)) {
+          showUpdatePrompt(release, current, releaseKey, !isInstalledApp());
           return;
         }
-        writeStored(RELEASE_KEY, current);
+        writeStored(RELEASE_KEY, releaseKey);
       } catch (error) {}
     }
 
@@ -2233,23 +2256,7 @@
       return expanded.some((moduleName) => moduleName.startsWith("Ice"));
     }
 
-    async function requestIceLogin(credentials, method = "POST") {
-      const body = {
-        action: "login",
-        usuario: credentials.user,
-        password: credentials.password,
-        rol: roleForIce(credentials.role)
-      };
-      if (method === "GET") {
-        const params = new URLSearchParams(body);
-        const response = await fetch(ICE_API_URL + "?" + params.toString(), {
-          method: "GET",
-          redirect: "follow",
-          cache: "no-store"
-        });
-        if (!response.ok) throw new Error("No se pudo contactar ICE por GET.");
-        return readJsonResponse(response, "ICE API");
-      }
+    async function postIceAction(body) {
       const response = await fetch(ICE_API_URL, {
         method: "POST",
         redirect: "follow",
@@ -2261,12 +2268,27 @@
       return readJsonResponse(response, "ICE API");
     }
 
-    async function prepareIceToken(session, credentials) {
+    async function requestIceLogin(session, credentials) {
+      const usuario = (credentials && credentials.user) || session.user || session.usuario || "";
+      const rol = roleForIce((credentials && credentials.role) || session.role || session.rol);
+      if (credentials && credentials.password) {
+        const passwordLogin = { action: "login", usuario, password: credentials.password, rol };
+        const result = await postIceAction(passwordLogin);
+        if (result && result.ok && result.token) return result;
+      }
+      return postIceAction({
+        action: "principalLogin",
+        usuario,
+        rol,
+        principal: "OPAUSTRO_LOGIN",
+        issuedAt: String(Date.now())
+      });
+    }
+
+    async function prepareIceToken(session, credentials = {}) {
       if (!sessionNeedsIceToken(session) || session.iceToken || !ICE_API_URL) return session;
       try {
-        let result;
-        try { result = await requestIceLogin(credentials, "POST"); }
-        catch (postError) { result = await requestIceLogin(credentials, "GET"); }
+        const result = await requestIceLogin(session, credentials);
         if (!result || !result.ok || !result.token) {
           throw new Error(result && result.message ? result.message : "No se pudo preparar el acceso a ICE.");
         }
@@ -2305,8 +2327,8 @@
       return url.pathname + url.search + url.hash;
     }
 
-    function startIcePreparation(session, credentials) {
-      if (!sessionNeedsIceToken(session) || session.iceToken || !ICE_API_URL || !credentials || !credentials.password) return Promise.resolve(session);
+    function startIcePreparation(session, credentials = {}) {
+      if (!sessionNeedsIceToken(session) || session.iceToken || !ICE_API_URL) return Promise.resolve(session);
       if (icePreparationPromise) return icePreparationPromise;
       icePreparationPromise = prepareIceToken(session, credentials).then((updated) => {
         state.currentSession = updated;
@@ -2373,39 +2395,19 @@
       panel.classList.toggle("module-host", !!module.embed);
       if (isIceModule(moduleName) && !session.iceToken) {
         panel.classList.remove("module-host");
-        if (icePreparationPromise) {
-          panel.innerHTML = `<div class="module-error"><strong>Preparando ICE...</strong><p>Estamos validando el acceso seguro del módulo. Espere un momento.</p></div>`;
-          setConnectionStatus("warn", "ICE preparando");
-          icePreparationPromise.then((updated) => {
-            if (readStored(ACTIVE_MODULE_KEY) === moduleName) activateModule(moduleName, updated, false);
-          });
-        } else {
-          const reason = (session.moduleErrors && session.moduleErrors.ICE) || "Para proteger los datos, confirme su contraseña y vuelva a preparar ICE.";
-          panel.innerHTML = `
-            <form class="module-error ice-retry" id="iceRetryForm">
-              <strong>Validar acceso a ICE</strong>
-              <p>${escapeHtml(reason)}</p>
-              <label class="ice-retry-field">
-                <span>Contraseña</span>
-                <input id="iceRetryPassword" type="password" autocomplete="current-password" required>
-              </label>
-              <button class="primary-btn" type="submit">Preparar ICE</button>
-            </form>`;
-          setConnectionStatus("warn", "ICE requiere validación");
-          const retryForm = $("#iceRetryForm");
-          if (retryForm) {
-            retryForm.addEventListener("submit", async (event) => {
-              event.preventDefault();
-              const password = $("#iceRetryPassword").value.trim();
-              if (!password) return;
-              panel.innerHTML = `<div class="module-error"><strong>Preparando ICE...</strong><p>Validando acceso seguro. Espere un momento.</p></div>`;
-              const updated = await prepareIceToken(session, { role: session.role, user: session.user, password });
-              state.currentSession = updated;
-              persistSession(updated);
-              activateModule(moduleName, updated, false);
-            });
+        panel.innerHTML = `<div class="module-error"><strong>Preparando ICE...</strong><p>Usando la sesión validada del login principal. Espere un momento.</p></div>`;
+        setConnectionStatus("warn", "ICE preparando");
+        const preparation = icePreparationPromise || startIcePreparation(session, { role: session.role, user: session.user });
+        preparation.then((updated) => {
+          if (readStored(ACTIVE_MODULE_KEY) !== moduleName) return;
+          if (updated && updated.iceToken) {
+            activateModule(moduleName, updated, false);
+          } else {
+            const reason = (updated && updated.moduleErrors && updated.moduleErrors.ICE) || "No se pudo preparar el acceso seguro a ICE.";
+            panel.innerHTML = `<div class="module-error"><strong>ICE no disponible temporalmente.</strong><p>${escapeHtml(reason)}</p><p>Los demás módulos pueden seguir usándose con normalidad.</p></div>`;
+            setConnectionStatus("err", "ICE sin conexión");
           }
-        }
+        });
       } else if (module.embed) {
         const src = buildModuleSrc(module, moduleName, session);
         panel.innerHTML = `<iframe class="module-frame" src="${src}" title="${module.label}" loading="eager"></iframe>`;

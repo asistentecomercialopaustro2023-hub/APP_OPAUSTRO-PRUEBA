@@ -1,11 +1,13 @@
 {
   "app": "OPAUSTRO",
-  "version": "1.1.5",
-  "label": "OPAUSTRO v1.1",
+  "version": "1.2.0",
+  "label": "OPAUSTRO v1.2",
   "channel": "prueba",
   "publishedAt": "2026-06-30",
   "notes": [
-    "ICE permite revalidar contraseña dentro del modulo cuando la sesion restaurada no tiene token seguro.",
+    "ICE usa la sesión validada del login principal y no solicita una segunda contraseña dentro del módulo.",
+    "La PWA instalada actualiza por clave de versión mayor/menor; v1.1 solo avisa al publicar v1.2 o al volver a una clave anterior.",
+    "La cabecera y la barra inferior móvil se mantienen fijas; el zoom queda contenido al módulo cargado.",
     "La web actualiza automaticamente; la PWA instalada mantiene confirmacion manual.",
     "Encabezado y barra inferior quedan fijos; solo el contenido del modulo hace scroll.",
     "ICE endurece lectura JSON y diagnostica HTML/cache sin romper toda la app.",
@@ -17,7 +19,9 @@
     "El aviso de actualizacion aparece al abrir la app, antes de iniciar sesion.",
     "Se integra ICE Pinguino como modulo con submodulos Resumen, Inventario, Reportes, Escaneo y Mis visitas.",
     "El login no bloquea la app si un modulo falla; el error queda contenido en el modulo afectado.",
-    "Se refuerza control de codificacion UTF-8 para evitar distorsion de tildes, signos y caracteres especiales.",
-    "Se mantiene control de versiones para actualizacion de PWA y rollback por Git tags."
-  ]
+    "Se refuerza control de codificacion UTF-8 para evitar distorsion de tildes, signos y caracteres especiales."
+  ],
+  "releaseKey": "1.2",
+  "forceUpdate": false,
+  "rollback": false
 }
