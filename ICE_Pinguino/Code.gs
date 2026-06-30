@@ -18,8 +18,14 @@ const APP = Object.freeze({
   VOID_RECORD: 'ANULADO'
 });
 
-function doGet() {
-  return json_({ ok: true, service: 'Control de Cabinets API', version: APP.VERSION, date: new Date().toISOString() });
+function doGet(e) {
+  try {
+    const params = (e && e.parameter) || {};
+    if (String(params.action || '').trim() === 'login') return json_(login_(params));
+    return json_({ ok: true, service: 'Control de Cabinets API', version: APP.VERSION, date: new Date().toISOString() });
+  } catch (error) {
+    return json_({ ok: false, message: error.message || String(error) });
+  }
 }
 
 function doPost(e) {

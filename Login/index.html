@@ -1322,6 +1322,38 @@
       color: #004b73;
     }
 
+    .update-progress {
+      display: grid;
+      gap: 8px;
+      margin: 18px 0 4px;
+    }
+
+    .update-progress[hidden] {
+      display: none;
+    }
+
+    .update-progress-track {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #d8e8f2;
+      box-shadow: inset 0 1px 2px rgba(0, 35, 56, 0.12);
+    }
+
+    .update-progress-bar {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #0aa8d8, #0074a8);
+      transition: width .25s ease;
+    }
+
+    .update-progress-label {
+      color: #004b73;
+      font-weight: 900;
+      font-size: .95rem;
+    }
+
     .update-actions {
       display: grid;
       grid-template-columns: 1fr 1.4fr;
@@ -1453,7 +1485,7 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.1.1';
+    const APP_VERSION = '1.1.2';
     const APP_RELEASE = 'OPAUSTRO v1.1';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
@@ -1495,6 +1527,10 @@
             <strong>Nueva: ${label}</strong>
             ${publishedAt ? `<span>Publicada: ${publishedAt}</span>` : ""}
           </div>
+          <div class="update-progress" hidden>
+            <div class="update-progress-track" aria-hidden="true"><div class="update-progress-bar"></div></div>
+            <div class="update-progress-label" role="status" aria-live="polite">Preparando actualización 0%</div>
+          </div>
           <div class="update-actions">
             <button type="button" class="update-later">Más tarde</button>
             <button type="button" class="update-now">Actualizar ahora</button>
@@ -1502,25 +1538,75 @@
         </div>`;
       document.body.appendChild(overlay);
 
+      const progress = overlay.querySelector(".update-progress");
+      const progressBar = overlay.querySelector(".update-progress-bar");
+      const progressLabel = overlay.querySelector(".update-progress-label");
+      const laterButton = overlay.querySelector(".update-later");
+      const nowButton = overlay.querySelector(".update-now");
       const closePrompt = () => overlay.remove();
-      overlay.querySelector(".update-later").addEventListener("click", closePrompt);
-      overlay.querySelector(".update-now").addEventListener("click", async () => {
-        writeStored(RELEASE_KEY, current);
-        try {
-          if ("serviceWorker" in navigator) {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.map(registration => registration.unregister()));
-          }
-        } catch (error) {}
-        try {
-          if ("caches" in window) {
-            const keys = await caches.keys();
-            await Promise.all(keys.map(key => caches.delete(key)));
-          }
-        } catch (error) {}
-        const target = location.pathname + "?v=" + encodeURIComponent(current) + "&t=" + Date.now() + location.hash;
-        location.replace(target);
-      });
+      laterButton.addEventListener("click", closePrompt);
+      nowButton.addEventListener("click", () => performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton }));
+    }
+
+    function updateInstallProgress(progressBar, progressLabel, percent, message) {
+      const value = Math.max(0, Math.min(100, Number(percent) || 0));
+      progressBar.style.width = value + "%";
+      progressLabel.textContent = message + " " + value + "%";
+    }
+
+    function wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function warmAppShell(current, progressBar, progressLabel) {
+      const assets = [
+        "../VERSION.json?v=" + encodeURIComponent(current),
+        "../manifest.webmanifest?v=" + encodeURIComponent(current),
+        "../Recuros_imagenes/logo_color.png",
+        "../Recuros_imagenes/icon-192.png",
+        "../ICE_Pinguino/modulo_Ice.html?v=" + encodeURIComponent(current),
+        "../ICE_Pinguino/resumen.html?v=" + encodeURIComponent(current),
+        "../ICE_Pinguino/inventario.html?v=" + encodeURIComponent(current),
+        "../ICE_Pinguino/reportes.html?v=" + encodeURIComponent(current)
+      ];
+      let done = 0;
+      for (const asset of assets) {
+        try { await fetch(asset, { cache: "reload" }); } catch (error) {}
+        done += 1;
+        updateInstallProgress(progressBar, progressLabel, 55 + Math.round((done / assets.length) * 30), "Descargando actualización");
+      }
+    }
+
+    async function performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton }) {
+      laterButton.disabled = true;
+      nowButton.disabled = true;
+      nowButton.textContent = "Actualizando...";
+      progress.hidden = false;
+      updateInstallProgress(progressBar, progressLabel, 5, "Preparando actualización");
+      await wait(250);
+      try {
+        if ("serviceWorker" in navigator) {
+          updateInstallProgress(progressBar, progressLabel, 20, "Revisando componentes");
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map(registration => registration.unregister()));
+        }
+      } catch (error) {}
+      await wait(250);
+      try {
+        if ("caches" in window) {
+          updateInstallProgress(progressBar, progressLabel, 40, "Limpiando caché anterior");
+          const keys = await caches.keys();
+          await Promise.all(keys.map(key => caches.delete(key)));
+        }
+      } catch (error) {}
+      removeStored(SESSION_KEY);
+      removeStored(ACTIVE_MODULE_KEY);
+      await warmAppShell(current, progressBar, progressLabel);
+      updateInstallProgress(progressBar, progressLabel, 100, "Actualizado. Espere un momento");
+      writeStored(RELEASE_KEY, current);
+      await wait(900);
+      const target = location.pathname + "?v=" + encodeURIComponent(current) + "&t=" + Date.now();
+      location.replace(target);
     }
 
     async function checkReleaseVersion() {
@@ -2035,21 +2121,40 @@
       return expanded.some((moduleName) => moduleName.startsWith("Ice"));
     }
 
+    async function requestIceLogin(credentials, method = "POST") {
+      const body = {
+        action: "login",
+        usuario: credentials.user,
+        password: credentials.password,
+        rol: roleForIce(credentials.role)
+      };
+      if (method === "GET") {
+        const params = new URLSearchParams(body);
+        const response = await fetch(ICE_API_URL + "?" + params.toString(), {
+          method: "GET",
+          redirect: "follow",
+          cache: "no-store"
+        });
+        if (!response.ok) throw new Error("No se pudo contactar ICE por GET.");
+        return readJsonResponse(response, "ICE API");
+      }
+      const response = await fetch(ICE_API_URL, {
+        method: "POST",
+        redirect: "follow",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        cache: "no-store",
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) throw new Error("No se pudo contactar ICE por POST.");
+      return readJsonResponse(response, "ICE API");
+    }
+
     async function prepareIceToken(session, credentials) {
       if (!sessionNeedsIceToken(session) || session.iceToken || !ICE_API_URL) return session;
       try {
-        const response = await fetch(ICE_API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          cache: "no-store",
-          body: JSON.stringify({
-            action: "login",
-            usuario: credentials.user,
-            password: credentials.password,
-            rol: roleForIce(credentials.role)
-          })
-        });
-        const result = await response.json();
+        let result;
+        try { result = await requestIceLogin(credentials, "POST"); }
+        catch (postError) { result = await requestIceLogin(credentials, "GET"); }
         if (!result || !result.ok || !result.token) {
           throw new Error(result && result.message ? result.message : "No se pudo preparar el acceso a ICE.");
         }
