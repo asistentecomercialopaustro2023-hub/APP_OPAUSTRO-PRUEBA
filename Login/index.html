@@ -1261,6 +1261,40 @@
       background: rgba(7,95,155,.08);
     }
 
+    .ice-retry {
+      gap: 12px;
+      width: min(100%, 360px);
+      margin: auto;
+    }
+
+    .ice-retry-field {
+      display: grid;
+      gap: 6px;
+      width: 100%;
+      color: #35536a;
+      font-weight: 800;
+    }
+
+    .ice-retry-field input {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #c9dbe8;
+      border-radius: 10px;
+      padding: 0 12px;
+      font: inherit;
+    }
+
+    .ice-retry .primary-btn {
+      width: 100%;
+      min-height: 46px;
+      border: 0;
+      border-radius: 10px;
+      background: #0b78ad;
+      color: #fff;
+      font: inherit;
+      font-weight: 900;
+    }
+
     .update-overlay {
       position: fixed;
       inset: 0;
@@ -1544,7 +1578,7 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.1.4';
+    const APP_VERSION = '1.1.5';
     const APP_RELEASE = 'OPAUSTRO v1.1';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
@@ -1569,7 +1603,13 @@
       return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;" })[char]);
     }
 
-    function showUpdatePrompt(release, current) {
+    function isInstalledApp() {
+      return window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        window.navigator.standalone === true;
+    }
+
+    function showUpdatePrompt(release, current, autoUpdate) {
       const previous = escapeHtml(readStored(RELEASE_KEY) || "versión anterior");
       const label = escapeHtml(release && release.label ? release.label : APP_RELEASE);
       const publishedAt = escapeHtml(release && release.publishedAt ? release.publishedAt : "");
@@ -1580,18 +1620,18 @@
       overlay.innerHTML = `
         <div class="update-card">
           <div class="update-icon">↻</div>
-          <h2>Actualización disponible</h2>
-          <p>Hay una nueva versión de OPAUSTRO lista para instalar antes de iniciar sesión.</p>
+          <h2>${autoUpdate ? "Actualizando OPAUSTRO" : "Actualización disponible"}</h2>
+          <p>${autoUpdate ? "La web se está actualizando automáticamente. Espere un momento." : "Hay una nueva versión de OPAUSTRO lista para instalar antes de iniciar sesión."}</p>
           <div class="update-meta">
             <span>Actual: ${previous}</span>
             <strong>Nueva: ${label}</strong>
             ${publishedAt ? `<span>Publicada: ${publishedAt}</span>` : ""}
           </div>
-          <div class="update-progress" hidden>
+          <div class="update-progress" ${autoUpdate ? "" : "hidden"}>
             <div class="update-progress-track" aria-hidden="true"><div class="update-progress-bar"></div></div>
             <div class="update-progress-label" role="status" aria-live="polite">Preparando actualización 0%</div>
           </div>
-          <div class="update-actions">
+          <div class="update-actions" ${autoUpdate ? "hidden" : ""}>
             <button type="button" class="update-later">Más tarde</button>
             <button type="button" class="update-now">Actualizar ahora</button>
           </div>
@@ -1603,9 +1643,13 @@
       const progressLabel = overlay.querySelector(".update-progress-label");
       const laterButton = overlay.querySelector(".update-later");
       const nowButton = overlay.querySelector(".update-now");
+      if (autoUpdate) {
+        performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton, keepSession: true });
+        return;
+      }
       const closePrompt = () => overlay.remove();
       laterButton.addEventListener("click", closePrompt);
-      nowButton.addEventListener("click", () => performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton }));
+      nowButton.addEventListener("click", () => performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton, keepSession: false }));
     }
 
     function updateInstallProgress(progressBar, progressLabel, percent, message) {
@@ -1641,10 +1685,12 @@
       }
     }
 
-    async function performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton }) {
-      laterButton.disabled = true;
-      nowButton.disabled = true;
-      nowButton.textContent = "Actualizando...";
+    async function performUpdateInstall({ current, progress, progressBar, progressLabel, laterButton, nowButton, keepSession }) {
+      if (laterButton) laterButton.disabled = true;
+      if (nowButton) {
+        nowButton.disabled = true;
+        nowButton.textContent = "Actualizando...";
+      }
       progress.hidden = false;
       updateInstallProgress(progressBar, progressLabel, 5, "Preparando actualización");
       await wait(250);
@@ -1663,8 +1709,10 @@
           await Promise.all(keys.map(key => caches.delete(key)));
         }
       } catch (error) {}
-      removeStored(SESSION_KEY);
-      removeStored(ACTIVE_MODULE_KEY);
+      if (!keepSession) {
+        removeStored(SESSION_KEY);
+        removeStored(ACTIVE_MODULE_KEY);
+      }
       await warmAppShell(current, progressBar, progressLabel);
       updateInstallProgress(progressBar, progressLabel, 100, "Actualizado. Espere un momento");
       writeStored(RELEASE_KEY, current);
@@ -1681,7 +1729,7 @@
         const current = release && release.version ? String(release.version) : APP_RELEASE;
         const stored = readStored(RELEASE_KEY);
         if (stored && stored !== current) {
-          showUpdatePrompt(release, current);
+          showUpdatePrompt(release, current, !isInstalledApp());
           return;
         }
         writeStored(RELEASE_KEY, current);
@@ -2258,7 +2306,7 @@
     }
 
     function startIcePreparation(session, credentials) {
-      if (!sessionNeedsIceToken(session) || session.iceToken || !ICE_API_URL) return Promise.resolve(session);
+      if (!sessionNeedsIceToken(session) || session.iceToken || !ICE_API_URL || !credentials || !credentials.password) return Promise.resolve(session);
       if (icePreparationPromise) return icePreparationPromise;
       icePreparationPromise = prepareIceToken(session, credentials).then((updated) => {
         state.currentSession = updated;
@@ -2332,9 +2380,31 @@
             if (readStored(ACTIVE_MODULE_KEY) === moduleName) activateModule(moduleName, updated, false);
           });
         } else {
-          const reason = (session.moduleErrors && session.moduleErrors.ICE) || "No se pudo preparar el acceso seguro a ICE.";
-          panel.innerHTML = `<div class="module-error"><strong>ICE no disponible temporalmente.</strong><p>${escapeHtml(reason)}</p><p>Los demás módulos pueden seguir usándose con normalidad.</p></div>`;
-          setConnectionStatus("err", "ICE sin conexión");
+          const reason = (session.moduleErrors && session.moduleErrors.ICE) || "Para proteger los datos, confirme su contraseña y vuelva a preparar ICE.";
+          panel.innerHTML = `
+            <form class="module-error ice-retry" id="iceRetryForm">
+              <strong>Validar acceso a ICE</strong>
+              <p>${escapeHtml(reason)}</p>
+              <label class="ice-retry-field">
+                <span>Contraseña</span>
+                <input id="iceRetryPassword" type="password" autocomplete="current-password" required>
+              </label>
+              <button class="primary-btn" type="submit">Preparar ICE</button>
+            </form>`;
+          setConnectionStatus("warn", "ICE requiere validación");
+          const retryForm = $("#iceRetryForm");
+          if (retryForm) {
+            retryForm.addEventListener("submit", async (event) => {
+              event.preventDefault();
+              const password = $("#iceRetryPassword").value.trim();
+              if (!password) return;
+              panel.innerHTML = `<div class="module-error"><strong>Preparando ICE...</strong><p>Validando acceso seguro. Espere un momento.</p></div>`;
+              const updated = await prepareIceToken(session, { role: session.role, user: session.user, password });
+              state.currentSession = updated;
+              persistSession(updated);
+              activateModule(moduleName, updated, false);
+            });
+          }
         }
       } else if (module.embed) {
         const src = buildModuleSrc(module, moduleName, session);
@@ -2486,5 +2556,4 @@
   </script>
 </body>
 </html>
-
 
