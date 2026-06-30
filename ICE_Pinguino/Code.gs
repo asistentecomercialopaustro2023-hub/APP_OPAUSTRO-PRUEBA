@@ -21,8 +21,9 @@ const APP = Object.freeze({
 function doGet(e) {
   try {
     const params = (e && e.parameter) || {};
-    if (String(params.action || '').trim() === 'login') return json_(login_(params));
-    return json_({ ok: true, service: 'Control de Cabinets API', version: APP.VERSION, date: new Date().toISOString() });
+    const action = String(params.action || '').trim();
+    if (!action) return json_({ ok: true, service: 'Control de Cabinets API', version: APP.VERSION, date: new Date().toISOString() });
+    return handleAction_(params);
   } catch (error) {
     return json_({ ok: false, message: error.message || String(error) });
   }
@@ -31,27 +32,31 @@ function doGet(e) {
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    const action = String(body.action || '').trim();
-    if (action === 'login') return json_(login_(body));
-
-    const session = requireSession_(body.token);
-    const actions = {
-      logout: () => logout_(body.token),
-      buscarCabinet: () => buscarCabinet_(body, session),
-      registrarVisita: () => registrarVisita_(body, session),
-      misVisitas: () => misVisitas_(session),
-      resumen: () => resumen_(session),
-      inventario: () => inventario_(body, session),
-      reportes: () => reportes_(body, session),
-      actualizarCabinet: () => actualizarCabinet_(body, session),
-      editarVisita: () => editarVisita_(body, session),
-      anularVisita: () => anularVisita_(body, session)
-    };
-    if (!actions[action]) throw new Error('Acción no permitida.');
-    return json_({ ok: true, data: actions[action]() });
+    return handleAction_(body);
   } catch (error) {
     return json_({ ok: false, message: error.message || String(error) });
   }
+}
+
+function handleAction_(body) {
+  const action = String(body.action || '').trim();
+  if (action === 'login') return json_(login_(body));
+
+  const session = requireSession_(body.token);
+  const actions = {
+    logout: () => logout_(body.token),
+    buscarCabinet: () => buscarCabinet_(body, session),
+    registrarVisita: () => registrarVisita_(body, session),
+    misVisitas: () => misVisitas_(session),
+    resumen: () => resumen_(session),
+    inventario: () => inventario_(body, session),
+    reportes: () => reportes_(body, session),
+    actualizarCabinet: () => actualizarCabinet_(body, session),
+    editarVisita: () => editarVisita_(body, session),
+    anularVisita: () => anularVisita_(body, session)
+  };
+  if (!actions[action]) throw new Error('Acción no permitida.');
+  return json_({ ok: true, data: actions[action]() });
 }
 
 /** Ejecutar manualmente una vez antes de desplegar. No borra información. */

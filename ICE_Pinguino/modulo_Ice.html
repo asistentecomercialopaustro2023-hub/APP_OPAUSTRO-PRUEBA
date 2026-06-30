@@ -125,10 +125,24 @@
       document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id)}));
       await bootEmbeddedSession();
     }
-    async function api(action,payload={},withToken=true){ if(withToken && !state.user?.token) throw new Error("Falta token seguro del módulo ICE. El backend debe entregar iceToken desde el login principal antes de consultar datos."); if(CONFIG.apiUrl.startsWith("PEGA_AQUI"))throw new Error("Falta configurar la URL /exec de Apps Script.");
-      let response;try{response=await fetch(CONFIG.apiUrl,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,...payload,...(withToken&&state.user?.token?{token:state.user.token}:{})})})}catch(_){throw new Error("No se pudo conectar. Publica el módulo en HTTPS y revisa la implementación de Apps Script.")}
-      const raw=await response.text();let result;try{result=JSON.parse(raw)}catch(_){throw new Error("Apps Script no devolvió JSON. Revisa doGet/doPost y crea una nueva implementación.")}
-      if(!result.ok)throw new Error(result.message||"Operación no disponible.");return result.data??result;
+    async function api(action,payload={},withToken=true){
+      if(withToken && !state.user?.token) throw new Error("Falta token seguro del módulo ICE. Vuelve al login principal e ingresa nuevamente.");
+      if(CONFIG.apiUrl.startsWith("PEGA_AQUI"))throw new Error("Falta configurar la URL /exec de Apps Script.");
+      const body={action,...payload,...(withToken&&state.user?.token?{token:state.user.token}:{})};
+      let response;
+      try{
+        response=await fetch(CONFIG.apiUrl,{method:"POST",redirect:"follow",cache:"no-store",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+      }catch(_){
+        throw new Error("No se pudo conectar con ICE. Revisa internet, HTTPS y la implementación publicada de Apps Script.");
+      }
+      const raw=await response.text();
+      const trimmed=raw.trim();
+      if(!trimmed) throw new Error("Apps Script no devolvió datos.");
+      if(trimmed[0]==="<") throw new Error("Apps Script devolvió HTML en lugar de JSON. Cierra sesión, actualiza la app y verifica que el /exec publicado sea el mismo en Login e ICE.");
+      let result;
+      try{result=JSON.parse(trimmed)}catch(_){throw new Error("Apps Script no devolvió JSON válido. Respuesta: "+trimmed.slice(0,120))}
+      if(!result.ok)throw new Error(result.message||"Operación no disponible.");
+      return result.data??result;
     }
     function externalProfile(){
       const params = new URLSearchParams(location.search);
