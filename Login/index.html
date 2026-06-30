@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -622,7 +622,13 @@
       display: grid;
       place-items: center;
       font-size: 1.3rem;
+    }    .group-icon img {
+      width: 30px;
+      height: 30px;
+      object-fit: contain;
     }
+
+
 
     .group-name {
       flex: 1;
@@ -1346,11 +1352,12 @@
 
   <script>
     const LOGIN_API_URL = 'https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec';
+    const ICE_API_URL = 'https://script.google.com/macros/s/AKfycbzGMe5fVi1Q6R1NPr5WI_bcdaLSKfHaTaFjGp8cwMBZJ54_sPsyrhfkgnPTEQ6B7Tfn/exec';
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '20260629-8';
-    const APP_RELEASE = 'OPAUSTRO PRUEBA 20260629-8';
+    const APP_VERSION = '1.1.0';
+    const APP_RELEASE = 'OPAUSTRO v1.1';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
 
@@ -1367,6 +1374,10 @@
     function removeStored(key) {
       try { localStorage.removeItem(key); } catch (error) {}
       try { sessionStorage.removeItem(key); } catch (error) {}
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;" })[char]);
     }
 
     async function checkReleaseVersion() {
@@ -1397,7 +1408,7 @@
       Ventas: {
         label: "Ventas",
         icon: "../Recuros_imagenes/resumen.png",
-        path: "../Ventas/ventas.html?embed=1",
+        path: "../Ventas/modulo_ventas.html?embed=1",
         embed: true
       },
       MapaVentas: {
@@ -1408,31 +1419,38 @@
         embed: true
       },
       VentasOperativo: {
-        label: "Ventas",
+        label: "BI Ventas",
         symbol: "chart",
         icon: "../Recuros_imagenes/resumen.png",
-        path: "../Ventas/ventas-reporte.html?r=ventas&embed=1",
+        path: "../Ventas/bi_ventas.html?embed=1",
         embed: true
       },
       Cartera: {
-        label: "Cartera",
+        label: "BI Cartera",
         symbol: "wallet",
         icon: "../Recuros_imagenes/inventario.png",
-        path: "../Ventas/ventas-reporte.html?r=cartera&embed=1",
+        path: "../Ventas/bi_cartera.html?embed=1",
         embed: true
       },
       VentasGerencial: {
-        label: "Ventas Gerencial",
+        label: "BI Gerencial",
         symbol: "board",
         icon: "../Recuros_imagenes/reporte.png",
-        path: "../Ventas/ventas-reporte.html?r=gerencial&embed=1",
+        path: "../Ventas/bi_gerencial.html?embed=1",
         embed: true
       },
       Retorno: {
-        label: "Retorno",
+        label: "BI Retornos",
         symbol: "return",
         icon: "../Recuros_imagenes/reporte.png",
-        path: "../Ventas/ventas-reporte.html?r=retornos&embed=1",
+        path: "../Ventas/bi_retornos.html?embed=1",
+        embed: true
+      },
+      NuevoDia: {
+        label: "BI Nuevo Dia",
+        symbol: "day",
+        icon: "../Recuros_imagenes/calendario.png",
+        path: "../Ventas/bi_nuevo_dia.html?embed=1",
         embed: true
       },
       Logistica: {
@@ -1462,6 +1480,36 @@
         path: "../Gerencia/revision.html?embed=1",
         embed: true
       },
+      IceResumen: {
+        label: "Resumen",
+        icon: "../Recuros_imagenes/resumen.png",
+        path: "../ICE_Pinguino/resumen.html?embed=1",
+        embed: true
+      },
+      IceInventario: {
+        label: "Inventario",
+        icon: "../Recuros_imagenes/inventario.png",
+        path: "../ICE_Pinguino/inventario.html?embed=1",
+        embed: true
+      },
+      IceReportes: {
+        label: "Reportes",
+        icon: "../Recuros_imagenes/reporte.png",
+        path: "../ICE_Pinguino/reportes.html?embed=1",
+        embed: true
+      },
+      IceEscaneo: {
+        label: "Escaneo",
+        icon: "../Recuros_imagenes/escanear.png",
+        path: "../ICE_Pinguino/escaneo.html?embed=1",
+        embed: true
+      },
+      IceMisVisitas: {
+        label: "Mis visitas",
+        icon: "../Recuros_imagenes/resumen.png",
+        path: "../ICE_Pinguino/mis_visitas.html?embed=1",
+        embed: true
+      },
       GerenciaFlujo: {
         label: "Flujo Caja",
         symbol: "cash",
@@ -1478,8 +1526,10 @@
       Ventas: ["Bryan Nunez", "Milton Quezada", "Supervisor", "vendedores"]
     };
 
-    const VENTAS_MODULES = ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno"];
-    const GERENCIA_MODULES = ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo"];
+    const VENTAS_MODULES = ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
+    const ICE_ADMIN_MODULES = ["IceResumen", "IceInventario", "IceReportes"];
+    const ICE_OPERATIVO_MODULES = ["IceEscaneo", "IceMisVisitas"];
+    const GERENCIA_MODULES = ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo", ...ICE_ADMIN_MODULES];
 
     const SYMBOLS = {
       map: "&#128506;&#65039;",
@@ -1487,6 +1537,7 @@
       wallet: "&#128188;",
       board: "&#128200;",
       return: "&#8617;",
+      day: "&#9728;&#65039;",
       dashboard: "&#128200;",
       cost: "&#128176;",
       cash: "&#128181;"
@@ -1498,7 +1549,7 @@
         label: "Ventas",
         icon: "&#128200;",
         iconPath: "../Recuros_imagenes/resumen.png",
-        modules: ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno"]
+        modules: ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"]
       },
       {
         id: "Logistica",
@@ -1513,6 +1564,13 @@
         icon: "&#128188;",
         iconPath: "../Recuros_imagenes/reporte.png",
         modules: ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo"]
+      },
+      {
+        id: "ICE",
+        label: "ICE",
+        icon: "&#127848;",
+        iconPath: "../Recuros_imagenes/pinguino.png",
+        modules: ["IceResumen", "IceInventario", "IceReportes", "IceEscaneo", "IceMisVisitas"]
       }
     ];
 
@@ -1641,6 +1699,15 @@
       const expanded = [];
       (modules || []).forEach((moduleName) => {
         if (moduleName === "Admin") {
+          [...VENTAS_MODULES, "Logistica", ...GERENCIA_MODULES].forEach((adminModule) => {
+            if (!expanded.includes(adminModule)) expanded.push(adminModule);
+          });
+          return;
+        }
+        if (/^(ICE|Ice|IceOperativo|IcePinguino)$/i.test(moduleName)) {
+          ICE_OPERATIVO_MODULES.forEach((iceModule) => {
+            if (!expanded.includes(iceModule)) expanded.push(iceModule);
+          });
           return;
         }
         if (moduleName === "Ventas") {
@@ -1677,7 +1744,7 @@
         const toggle = document.createElement("button");
         toggle.type = "button";
         toggle.className = "group-toggle";
-        toggle.innerHTML = `<span class="group-icon" aria-hidden="true">${group.icon}</span><span class="group-name">${group.label}</span><span class="group-caret">›</span>`;
+        toggle.innerHTML = `<span class="group-icon" aria-hidden="true">${renderIconMarkup(group.iconPath || group.icon)}</span><span class="group-name">${group.label}</span><span class="group-caret">›</span>`;
         toggle.addEventListener("click", () => {
           if (!window.matchMedia("(max-width: 850px)").matches) {
             document.querySelector("#appScreen").classList.add("sidebar-expanded");
@@ -1816,6 +1883,59 @@
       else setConnectionStatus("warn", data.message || "Verificando");
     });
 
+
+    function roleForIce(role) {
+      const normalized = String(role || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+      if (normalized === "ADMIN" || normalized === "ADMINISTRADOR") return "ADMIN";
+      if (normalized === "GERENCIA" || normalized === "GERENTE") return "GERENCIA";
+      return "VENDEDOR";
+    }
+
+    function sessionNeedsIceToken(session) {
+      const expanded = expandModules(session.modules || []);
+      return expanded.some((moduleName) => moduleName.startsWith("Ice"));
+    }
+
+    async function prepareIceToken(session, credentials) {
+      if (!sessionNeedsIceToken(session) || session.iceToken || !ICE_API_URL) return session;
+      try {
+        const response = await fetch(ICE_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          cache: "no-store",
+          body: JSON.stringify({
+            action: "login",
+            usuario: credentials.user,
+            password: credentials.password,
+            rol: roleForIce(credentials.role)
+          })
+        });
+        const result = await response.json();
+        if (!result || !result.ok || !result.token) {
+          throw new Error(result && result.message ? result.message : "No se pudo preparar el acceso a ICE.");
+        }
+        return {
+          ...session,
+          iceToken: result.token,
+          iceUser: result.user || null,
+          moduleErrors: { ...(session.moduleErrors || {}), ICE: "" }
+        };
+      } catch (error) {
+        return {
+          ...session,
+          iceToken: "",
+          moduleErrors: {
+            ...(session.moduleErrors || {}),
+            ICE: error && error.message ? error.message : "ICE no pudo preparar datos."
+          }
+        };
+      }
+    }
+
+    function isIceModule(moduleName) {
+      return /^Ice/.test(String(moduleName || ""));
+    }
+
     function renderApp(session) {
       state.currentSession = session;
       persistSession(session);
@@ -1855,7 +1975,12 @@
       setConnectionStatus(module.embed ? "warn" : "warn", module.embed ? "Conectando" : "Sin base de datos");
       const panel = $("#blankPanel");
       panel.classList.toggle("module-host", !!module.embed);
-      if (module.embed) {
+      if (isIceModule(moduleName) && !session.iceToken) {
+        panel.classList.remove("module-host");
+        const reason = (session.moduleErrors && session.moduleErrors.ICE) || "No se pudo preparar el acceso seguro a ICE.";
+        panel.innerHTML = `<div class="module-error"><strong>ICE no disponible temporalmente.</strong><p>${escapeHtml(reason)}</p><p>Los demás módulos pueden seguir usándose con normalidad.</p></div>`;
+        setConnectionStatus("err", "ICE sin conexión");
+      } else if (module.embed) {
         const src = module.path + (module.path.includes("?") ? "&" : "?") + "v=" + APP_VERSION;
         panel.innerHTML = `<iframe class="module-frame" src="${src}" title="${module.label}" loading="eager"></iframe>`;
         const frame = panel.querySelector("iframe");
@@ -1977,17 +2102,19 @@
       submitButton.textContent = "Validando...";
 
       try {
-        const response = await authenticate({
+        const credentials = {
           role: roleSelect.value,
           user: userSelect.value,
           password: $("#password").value.trim()
-        });
+        };
+        let response = await authenticate(credentials);
 
         if (!response || !response.success) {
           setMessage(response && response.message ? response.message : "Credenciales no validas.", "error");
           return;
         }
 
+        response = await prepareIceToken(response, credentials);
         renderApp(response);
       } catch (error) {
         setMessage("No se pudo validar el acceso. Intente nuevamente.", "error");

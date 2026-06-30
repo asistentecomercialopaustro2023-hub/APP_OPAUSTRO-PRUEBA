@@ -1,4 +1,4 @@
-const CACHE_NAME = 'opaustro-portal-v7';
+const CACHE_NAME = 'opaustro-gerencia-v1.1';
 const APP_SHELL = [
   './',
   './index.html',
