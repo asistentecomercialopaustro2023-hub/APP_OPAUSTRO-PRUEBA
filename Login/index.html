@@ -1261,6 +1261,103 @@
       background: rgba(7,95,155,.08);
     }
 
+    .update-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0, 34, 54, 0.58);
+      backdrop-filter: blur(5px);
+    }
+
+    .update-card {
+      width: min(100%, 460px);
+      padding: 26px;
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 24px 70px rgba(0, 28, 47, 0.28);
+      color: var(--text);
+    }
+
+    .update-icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: #e8f6ff;
+      color: #0074a8;
+      font-size: 28px;
+      font-weight: 900;
+      margin-bottom: 14px;
+    }
+
+    .update-card h2 {
+      margin: 0 0 8px;
+      font-size: clamp(1.45rem, 4vw, 1.9rem);
+      line-height: 1.1;
+    }
+
+    .update-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .update-meta {
+      display: grid;
+      gap: 6px;
+      margin: 18px 0 22px;
+      padding: 14px;
+      border: 1px solid #c9deec;
+      border-radius: 12px;
+      background: #f6fbff;
+      color: #486078;
+      font-size: 0.95rem;
+    }
+
+    .update-meta strong {
+      color: #004b73;
+    }
+
+    .update-actions {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 10px;
+    }
+
+    .update-actions button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 10px;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .update-later {
+      background: #eef4f8;
+      color: #496275;
+    }
+
+    .update-now {
+      background: linear-gradient(135deg, #1388bd, #006fa5);
+      color: #ffffff;
+      box-shadow: 0 14px 28px rgba(0, 111, 165, 0.22);
+    }
+
+    @media (max-width: 520px) {
+      .update-card {
+        padding: 22px 18px;
+      }
+
+      .update-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1356,7 +1453,7 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.1.0';
+    const APP_VERSION = '1.1.1';
     const APP_RELEASE = 'OPAUSTRO v1.1';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
@@ -1380,6 +1477,52 @@
       return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;" })[char]);
     }
 
+    function showUpdatePrompt(release, current) {
+      const previous = escapeHtml(readStored(RELEASE_KEY) || "versión anterior");
+      const label = escapeHtml(release && release.label ? release.label : APP_RELEASE);
+      const publishedAt = escapeHtml(release && release.publishedAt ? release.publishedAt : "");
+      const overlay = document.createElement("div");
+      overlay.className = "update-overlay";
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.innerHTML = `
+        <div class="update-card">
+          <div class="update-icon">↻</div>
+          <h2>Actualización disponible</h2>
+          <p>Hay una nueva versión de OPAUSTRO lista para instalar antes de iniciar sesión.</p>
+          <div class="update-meta">
+            <span>Actual: ${previous}</span>
+            <strong>Nueva: ${label}</strong>
+            ${publishedAt ? `<span>Publicada: ${publishedAt}</span>` : ""}
+          </div>
+          <div class="update-actions">
+            <button type="button" class="update-later">Más tarde</button>
+            <button type="button" class="update-now">Actualizar ahora</button>
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      const closePrompt = () => overlay.remove();
+      overlay.querySelector(".update-later").addEventListener("click", closePrompt);
+      overlay.querySelector(".update-now").addEventListener("click", async () => {
+        writeStored(RELEASE_KEY, current);
+        try {
+          if ("serviceWorker" in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(registration => registration.unregister()));
+          }
+        } catch (error) {}
+        try {
+          if ("caches" in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(key => caches.delete(key)));
+          }
+        } catch (error) {}
+        const target = location.pathname + "?v=" + encodeURIComponent(current) + "&t=" + Date.now() + location.hash;
+        location.replace(target);
+      });
+    }
+
     async function checkReleaseVersion() {
       try {
         const response = await fetch("../VERSION.json?v=" + Date.now(), { cache: "no-store" });
@@ -1388,12 +1531,8 @@
         const current = release && release.version ? String(release.version) : APP_RELEASE;
         const stored = readStored(RELEASE_KEY);
         if (stored && stored !== current) {
-          const message = "Hay una nueva versión de OPAUSTRO disponible. Pulsa Aceptar para actualizar.";
-          if (confirm(message)) {
-            writeStored(RELEASE_KEY, current);
-            location.replace(location.pathname + "?v=" + encodeURIComponent(current) + location.hash);
-            return;
-          }
+          showUpdatePrompt(release, current);
+          return;
         }
         writeStored(RELEASE_KEY, current);
       } catch (error) {}

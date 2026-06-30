@@ -1,10 +1,11 @@
 {
   "app": "OPAUSTRO",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "label": "OPAUSTRO v1.1",
   "channel": "prueba",
   "publishedAt": "2026-06-30",
   "notes": [
+    "El aviso de actualizacion aparece al abrir la app, antes de iniciar sesion.",
     "Se integra ICE Pinguino como modulo con submodulos Resumen, Inventario, Reportes, Escaneo y Mis visitas.",
     "El login no bloquea la app si un modulo falla; el error queda contenido en el modulo afectado.",
     "Se refuerza control de codificacion UTF-8 para evitar distorsion de tildes, signos y caracteres especiales.",
