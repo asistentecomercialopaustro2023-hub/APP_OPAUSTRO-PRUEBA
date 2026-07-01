@@ -744,6 +744,11 @@ function cleanFecha(f) {
   if(typeof f==='string' && /^\d{4}-\d{2}-\d{2}/.test(f)) return f.slice(0,10);
   const dt = new Date(f);
   if(!isNaN(dt)) { const y=dt.getFullYear(),m=String(dt.getMonth()+1).padStart(2,'0'),d=String(dt.getDate()).padStart(2,'0'); return y+'-'+m+'-'+d; }
+  const m = String(f).match(/^(Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2})\s+(\d{4})/i);
+  if(m) {
+    const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+    return `${m[4]}-${months[m[2].slice(0,3).toLowerCase()]}-${String(m[3]).padStart(2,'0')}`;
+  }
   return String(f).slice(0,10);
 }
 
@@ -800,12 +805,7 @@ async function cargarDatos() {
   spin('Cargando datos...');
   try {
     const [rd,rp,rc] = await Promise.all([api('getDias'),api('getPagos'),api('getCfg')]);
-    dias = (rd.dias||[]).map(d=>{
-      let f=d.fecha;
-      if(f&&typeof f==='object'&&f.getFullYear){const y=f.getFullYear(),m=String(f.getMonth()+1).padStart(2,'0'),dy=String(f.getDate()).padStart(2,'0');f=y+'-'+m+'-'+dy;}
-      else if(typeof f==='string'&&f.length>10){const dt=new Date(f);if(!isNaN(dt)){const y=dt.getFullYear(),m=String(dt.getMonth()+1).padStart(2,'0'),dy=String(dt.getDate()).padStart(2,'0');f=y+'-'+m+'-'+dy;}else f=f.slice(0,10);}
-      return {...d,fecha:String(f||'').slice(0,10)};
-    });
+    dias = (rd.dias||[]).map(d=>({...d,fecha:cleanFecha(d.fecha)}));
     console.log('Dias cargados:',dias.length,'primer fecha:',dias[0]?.fecha);
     pagos = (rp.pagos||[]).map(p=>({...p,monto:+p.monto,pp:+p.pp,montoFinal:+p.montoFinal,fecha:cleanFecha(p.fecha)}));
     saldo0 = rc.cfg&&rc.cfg.saldo0!==undefined ? +rc.cfg.saldo0 : null;

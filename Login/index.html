@@ -2317,6 +2317,7 @@
     function buildModuleSrc(module, moduleName, session) {
       const url = new URL(module.path, location.href);
       url.searchParams.set("v", APP_VERSION);
+      url.searchParams.set("t", Date.now());
       if (isIceModule(moduleName) && session.iceToken) {
         url.searchParams.set("iceToken", session.iceToken);
         url.searchParams.set("token", session.iceToken);
