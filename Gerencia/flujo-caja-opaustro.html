@@ -111,6 +111,26 @@ body::before {
 .nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
 .nav-bottom { padding: 12px 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
 
+html.embed-mode .shell { height: 100dvh; min-height: 0; }
+html.embed-mode .sidebar { max-height: 100dvh; }
+html.embed-mode .logo-area { padding: 12px 12px 10px; }
+html.embed-mode .logo-img { width: 126px; }
+html.embed-mode .logo-badge { margin-top: 7px; }
+html.embed-mode .nav { padding: 10px 8px; gap: 1px; }
+html.embed-mode .nav-bottom { padding: 9px 8px 10px; }
+html.embed-mode .nav-section-label { padding: 7px 9px 4px; }
+html.embed-mode .nav-btn { padding: 8px 10px; min-height: 35px; }
+
+@media (max-height: 620px) {
+  .logo-area { padding: 10px 12px 8px; }
+  .logo-img { width: 118px; }
+  .logo-badge { margin-top: 6px; padding: 3px 7px; }
+  .nav { padding: 8px; }
+  .nav-bottom { padding: 8px; }
+  .nav-section-label { padding: 6px 8px 3px; }
+  .nav-btn { padding: 7px 9px; min-height: 32px; font-size: 11px; }
+}
+
 /* MAIN */
 .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 
