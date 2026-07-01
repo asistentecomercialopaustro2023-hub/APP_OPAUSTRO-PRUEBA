@@ -1887,9 +1887,12 @@
     };
 
     const VENTAS_MODULES = ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
+    const VENDEDOR_MODULES = ["NuevoDia", "Cartera", "Retorno", "MapaVentas"];
+    const LOGISTICA_MODULES = ["Logistica", "Retorno"];
     const ICE_ADMIN_MODULES = ["IceResumen", "IceInventario", "IceReportes"];
     const ICE_OPERATIVO_MODULES = ["IceEscaneo", "IceMisVisitas"];
-    const GERENCIA_MODULES = ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo", ...ICE_ADMIN_MODULES];
+    const GERENCIA_MODULES = ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo"];
+    const ADMIN_GERENCIA_MODULES = [...VENTAS_MODULES, ...LOGISTICA_MODULES, ...GERENCIA_MODULES, ...ICE_ADMIN_MODULES];
 
     const SYMBOLS = {
       map: "&#128506;&#65039;",
@@ -2055,11 +2058,40 @@
       return button;
     }
 
+    function normalizeRoleName(role) {
+      return String(role || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[\s-]+/g, "_")
+        .toUpperCase();
+    }
+
+    function normalizePersonName(name) {
+      return String(name || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .toUpperCase();
+    }
+
+    function modulesForRole(role) {
+      const normalized = normalizeRoleName(role);
+      if (normalized === "ADMIN" || normalized === "ADMINISTRADOR") return ADMIN_GERENCIA_MODULES;
+      if (normalized === "GERENCIA" || normalized === "GERENTE") return ADMIN_GERENCIA_MODULES;
+      if (normalized === "LOGISTICA") return LOGISTICA_MODULES;
+      if (normalized === "TECNICO" || normalized === "TECNICO_LOGISTICA") return ["Logistica"];
+      if (normalized === "SUPERVISOR") return VENTAS_MODULES;
+      if (normalized === "VENDEDOR" || normalized === "VENTAS") return VENDEDOR_MODULES;
+      if (normalized === "VENDEDORES_ICE" || normalized === "VENDEDOR_ICE" || normalized === "ICE") return ICE_OPERATIVO_MODULES;
+      return null;
+    }
+
     function expandModules(modules) {
       const expanded = [];
       (modules || []).forEach((moduleName) => {
         if (moduleName === "Admin") {
-          [...VENTAS_MODULES, "Logistica", ...GERENCIA_MODULES].forEach((adminModule) => {
+          ADMIN_GERENCIA_MODULES.forEach((adminModule) => {
             if (!expanded.includes(adminModule)) expanded.push(adminModule);
           });
           return;
@@ -2087,13 +2119,33 @@
       return expanded;
     }
 
+    function visibleModulesForSession(session) {
+      const role = session && (session.role || session.rol);
+      const user = session && (session.user || session.usuario || session.nombre);
+      const roleModules = modulesForRole(role);
+      if (normalizeRoleName(role) === "SUPERVISOR" && ["JHONNY CHAFLA", "JHONY CHAFLA"].includes(normalizePersonName(user))) {
+        return expandModules([...VENTAS_MODULES, ...ICE_ADMIN_MODULES]);
+      }
+      return expandModules(roleModules || (session && session.modules) || []);
+    }
+
+    function areaGroupsForSession(session) {
+      const normalized = normalizeRoleName(session && (session.role || session.rol));
+      if (normalized === "LOGISTICA") {
+        return AREA_GROUPS.map((group) => (
+          group.id === "Logistica" ? { ...group, modules: LOGISTICA_MODULES } : group
+        )).filter((group) => group.id === "Logistica");
+      }
+      return AREA_GROUPS;
+    }
+
     function renderModuleGroups(session, visibleModules) {
       const sideModules = $("#sideModules");
       const bottomModules = $("#bottomModules");
       sideModules.innerHTML = "";
       bottomModules.innerHTML = "";
 
-      AREA_GROUPS.forEach((group) => {
+      areaGroupsForSession(session).forEach((group) => {
         const modules = group.modules.filter((moduleName) => visibleModules.includes(moduleName));
         if (!modules.length) return;
 
@@ -2128,8 +2180,8 @@
       renderBottomGroups(session, visibleModules);
     }
 
-    function visibleAreaGroups(visibleModules) {
-      return AREA_GROUPS.map((group) => ({
+    function visibleAreaGroups(visibleModules, session = state.currentSession) {
+      return areaGroupsForSession(session).map((group) => ({
         ...group,
         modules: group.modules.filter((moduleName) => visibleModules.includes(moduleName))
       })).filter((group) => group.modules.length);
@@ -2159,7 +2211,7 @@
       const bottomModules = $("#bottomModules");
       bottomModules.innerHTML = "";
       bottomModules.classList.remove("is-submenu");
-      const groups = visibleAreaGroups(visibleModules);
+      const groups = visibleAreaGroups(visibleModules, session);
       bottomModules.style.setProperty("--bottom-count", Math.max(groups.length, 1));
       groups.forEach((group) => {
         bottomModules.appendChild(createBottomButton(group.label, group.iconPath || group.icon, () => {
@@ -2252,7 +2304,7 @@
     }
 
     function sessionNeedsIceToken(session) {
-      const expanded = expandModules(session.modules || []);
+      const expanded = visibleModulesForSession(session || {});
       return expanded.some((moduleName) => moduleName.startsWith("Ice"));
     }
 
@@ -2364,7 +2416,7 @@
       $("#sessionUser").textContent = session.user || "Usuario";
       $("#sessionRole").textContent = session.role === "admin" ? "Administrador" : session.role;
 
-      const visibleModules = expandModules(session.modules);
+      const visibleModules = visibleModulesForSession(session);
       state.visibleModules = visibleModules;
       renderModuleGroups(session, visibleModules);
 
