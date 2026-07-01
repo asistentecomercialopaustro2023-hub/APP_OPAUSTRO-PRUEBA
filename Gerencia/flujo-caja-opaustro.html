@@ -111,27 +111,6 @@ body::before {
 .nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
 .nav-bottom { padding: 12px 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
 
-html.embed-mode .shell { height: 100dvh; min-height: 0; }
-html.embed-mode .sidebar { max-height: 100dvh; padding-bottom: 120px; }
-html.embed-mode .logo-area { padding: 12px 12px 10px; }
-html.embed-mode .logo-img { width: 126px; }
-html.embed-mode .logo-badge { margin-top: 7px; }
-html.embed-mode .nav { padding: 10px 8px; gap: 1px; }
-html.embed-mode .nav-bottom { padding: 9px 8px 10px; }
-html.embed-mode .nav-section-label { padding: 7px 9px 4px; }
-html.embed-mode .nav-btn { padding: 8px 10px; min-height: 35px; }
-
-@media (max-height: 620px) {
-  .logo-area { padding: 10px 12px 8px; }
-  .logo-img { width: 118px; }
-  .logo-badge { margin-top: 6px; padding: 3px 7px; }
-  .nav { padding: 8px; }
-  .nav-bottom { padding: 8px; }
-  .nav-section-label { padding: 6px 8px 3px; }
-  .nav-btn { padding: 7px 9px; min-height: 32px; font-size: 11px; }
-  html.embed-mode .sidebar { padding-bottom: 96px; }
-}
-
 /* MAIN */
 .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 
@@ -342,67 +321,9 @@ html.embed-mode .nav-btn { padding: 8px 10px; min-height: 35px; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
 .empty { text-align: center; padding: 36px; color: var(--muted); font-size: 12px; line-height: 1.7; }
-
-/* LOGIN FLUJO DE CAJA */
-.fc-login-bg { position: fixed; inset: 0; z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow: hidden; background: linear-gradient(135deg,#060e1a 0%,#081624 50%,#060e1a 100%); }
-.fc-login-bg::before { content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 22% 22%,rgba(37,99,235,.32) 0%,transparent 44%),radial-gradient(ellipse at 80% 78%,rgba(0,214,160,.14) 0%,transparent 38%); pointer-events:none; }
-.fc-login-bg::after { content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px); background-size:48px 48px; pointer-events:none; }
-.fc-login-back { position:absolute; top:18px; left:20px; z-index:2; padding:8px 14px; border:1px solid rgba(255,255,255,.13); border-radius:8px; background:rgba(255,255,255,.07); color:rgba(255,255,255,.68); font-size:12px; text-decoration:none; transition:.15s; }
-.fc-login-back:hover { background:rgba(255,255,255,.14); color:#fff; }
-.fc-login-card { position:relative; z-index:1; width:100%; max-width:400px; padding:38px 34px; border-radius:18px; background:#fff; color:#0f172a; box-shadow:0 0 0 1px rgba(255,255,255,.07),0 40px 90px rgba(0,0,0,.55),0 0 80px rgba(37,99,235,.16); }
-.fc-login-top { text-align:center; margin-bottom:26px; }
-.fc-login-logo { display:block; width:auto; height:48px; margin:0 auto 14px; }
-.fc-login-title { color:#0b3c70; font-size:21px; font-weight:900; }
-.fc-login-sub { margin-top:4px; color:#687386; font-size:12px; }
-.fc-login-field { margin-top:15px; }
-.fc-login-field label { display:block; margin-bottom:6px; color:#475569; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
-.fc-login-field select,.fc-login-field input { width:100%; padding:11px 12px; border:1px solid #dbe3ef; border-radius:9px; outline:none; background:#f8fafc; color:#0f172a; font:inherit; }
-.fc-login-field select:focus,.fc-login-field input:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.12); }
-.fc-login-btn { width:100%; margin-top:18px; padding:12px; border:0; border-radius:9px; background:linear-gradient(135deg,#2563eb,#1677d2); color:#fff; font:inherit; font-weight:800; cursor:pointer; }
-.fc-login-btn:hover { filter:brightness(1.06); }
-.fc-login-status { min-height:17px; margin-top:11px; color:#64748b; font-size:11px; text-align:center; }
-.fc-login-status.error { color:#dc2626; font-weight:700; }
-.fc-login-brand { margin-top:17px; padding-top:15px; border-top:1px solid #eef2f7; color:#a0aec0; font-size:10px; font-weight:700; text-align:center; text-transform:uppercase; letter-spacing:.08em; }
-@media(max-width:500px){.fc-login-card{padding:28px 20px;border-radius:14px}.fc-login-back{top:14px;left:14px}}
 </style>
-
-<script>
-(function(){
-  if(new URLSearchParams(location.search).get('embed')==='1'){
-    document.documentElement.classList.add('embed-mode');
-    const style=document.createElement('style');
-    style.textContent='html.embed-mode .topbar{display:none!important;}html.embed-mode .fc-login-bg{display:none!important;}html.embed-mode .app{min-height:100vh!important;}';
-    document.head.appendChild(style);
-  }
-})();
-</script>
-
 </head>
 <body>
-
-<div class="fc-login-bg" id="fc-login-bg" style="display:none">
-  <a class="fc-login-back" href="./tablero.html">← Gerencia</a>
-  <form class="fc-login-card" onsubmit="return fcDoLogin(event)">
-    <div class="fc-login-top">
-      <img class="fc-login-logo" src="./logo.png" alt="Opaustro" onerror="this.style.display='none'">
-      <div class="fc-login-title">Flujo de Caja</div>
-      <div class="fc-login-sub">Opaustro Cía. Ltda. · Acceso restringido</div>
-    </div>
-    <div class="fc-login-field">
-      <label for="fc-login-user">Usuario</label>
-      <select id="fc-login-user" required disabled>
-        <option value="">Cargando usuarios...</option>
-      </select>
-    </div>
-    <div class="fc-login-field">
-      <label for="fc-login-pass">Contraseña</label>
-      <input type="password" id="fc-login-pass" required placeholder="••••••" autocomplete="current-password">
-    </div>
-    <button class="fc-login-btn" type="submit">Ingresar</button>
-    <div class="fc-login-status" id="fc-login-status">Conectando con usuarios autorizados…</div>
-    <div class="fc-login-brand">Flujo de Caja · Opaustro</div>
-  </form>
-</div>
 
 <div class="toast" id="toast"></div>
 <div class="spin-overlay" id="spin" style="display:none;">
@@ -521,8 +442,6 @@ html.embed-mode .nav-btn { padding: 8px 10px; min-height: 35px; }
         </div>
         <button class="btn btn-ghost btn-sm" onclick="recargar()">↺ Sync</button>
         <button class="btn btn-ghost btn-sm" onclick="exportXLSX()">↓ Excel</button>
-        <a class="btn btn-ghost btn-sm" href="./tablero.html" style="text-decoration:none;">← Gerencia</a>
-        <button class="btn btn-ghost btn-sm" onclick="fcLogout()">⏻ Salir</button>
       </div>
     </div>
 
@@ -806,109 +725,12 @@ html.embed-mode .nav-btn { padding: 8px 10px; min-height: 35px; }
 
 <script>
 // ======== CONFIG ========
-const GERENCIA_API_URL = 'https://script.google.com/macros/s/AKfycbysUpAl-ZR6ydiGkQaBb531a1N1_rJBZfSI3VIbCP_5TLfRFPqAJDkX6GzgJKRyBCVbH/exec';
-const GERENCIA_API_KEY = '';
-const GERENCIA_READ_ONLY = true;
-const GERENCIA_SHEET_ID = '10utr40MF-F-3b0ouxNGDQaCw08sRLjmD6f1EYUaI344';
-let SCRIPT_URL = GERENCIA_API_URL;
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5L7mfo3Hk0sEa0_SY-THWv0zOaRHOwWmhQGrr-QXHWE2dMxOq8Lsr7VxmNQnXWv5o4A/exec'; localStorage.setItem('opa_url', SCRIPT_URL);
 let saldo0 = null;
 let dias = [];
 let pagos = [];
 let ventas = [];
-const FC_AUTH_KEY = 'flujo_auth_session';
-const FC_AUTH_NAME_KEY = 'flujo_auth_name';
-const FC_USUARIOS_URL = '';
-let FC_USUARIOS = [];
-let FC_APP_INICIADA = false;
 
-function fcNorm(v){
-  return String(v||'').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-}
-
-function fcListaValida(lista,accion){
-  if(!Array.isArray(lista)||!lista.length)return false;
-  if(accion!=='getUsuariosFlujo')return true;
-  return lista.some(u=>['FLUJO','GERENCIA'].includes(fcNorm(u.rol)));
-}
-
-async function fcCargarUsuarios(){
-  if(!FC_USUARIOS_URL) return;
-  const sel=document.getElementById('fc-login-user');
-  const estado=document.getElementById('fc-login-status');
-  for(const accion of ['getUsuariosFlujo','getUsuariosGerencial']){
-    try{
-      const r=await fetch(FC_USUARIOS_URL+'?action='+accion,{redirect:'follow',cache:'no-store'});
-      const d=await r.json();
-      if(fcListaValida(d.usuarios,accion)){
-        FC_USUARIOS=d.usuarios;
-        sel.innerHTML='<option value="">Seleccionar usuario...</option>';
-        FC_USUARIOS.forEach(u=>{
-          const op=document.createElement('option');
-          op.value=u.usuario;
-          op.textContent=u.usuario;
-          sel.appendChild(op);
-        });
-        sel.disabled=false;
-        estado.textContent='Usuarios autorizados cargados';
-        estado.classList.remove('error');
-        return;
-      }
-    }catch(e){}
-  }
-  sel.innerHTML='<option value="">No se pudieron cargar usuarios</option>';
-  estado.textContent='No hay conexión con el registro de usuarios.';
-  estado.classList.add('error');
-}
-
-function fcDoLogin(ev){
-  if(ev)ev.preventDefault();
-  const usuario=document.getElementById('fc-login-user').value;
-  const clave=document.getElementById('fc-login-pass').value;
-  const estado=document.getElementById('fc-login-status');
-  const encontrado=FC_USUARIOS.find(u=>fcNorm(u.usuario)===fcNorm(usuario)&&String(u.clave)===String(clave));
-  if(encontrado){
-    sessionStorage.setItem(FC_AUTH_KEY,'ok');
-    sessionStorage.setItem(FC_AUTH_NAME_KEY,encontrado.usuario);
-    document.getElementById('fc-login-bg').style.display='none';
-    iniciarFlujo();
-    return false;
-  }
-  estado.textContent='Usuario o contraseña incorrectos.';
-  estado.classList.add('error');
-  document.getElementById('fc-login-pass').value='';
-  document.getElementById('fc-login-pass').focus();
-  return false;
-}
-
-function fcLogout(){
-  sessionStorage.setItem(FC_AUTH_KEY,'ok');
-  window.location.href='./flujo-caja-opaustro.html';
-}
-
-function iniciarFlujo(){
-  if(FC_APP_INICIADA)return;
-  FC_APP_INICIADA=true;
-  aplicarModoSoloLectura();
-  const hoy=today();
-  document.getElementById('nd-fecha').value=hoy;
-  document.getElementById('nd-fecha-lbl').textContent=fmtDate(hoy);
-  document.getElementById('p-fecha').value=addDays(hoy,30);
-  document.getElementById('filtro-mes').value=hoy.slice(0,7);
-  document.getElementById('top-sub').textContent=fmtDate(hoy);
-  cargarConfigProyeccion();
-  cargarDatos();
-}
-
-
-function aplicarModoSoloLectura(){
-  if(!GERENCIA_READ_ONLY)return;
-  document.querySelectorAll('[onclick*="guardar"],[onclick*="marcarPagado"],[onclick*="deletePago"],[onclick*="editarPago"],[onclick*="abrirConfig"]').forEach(el=>{
-    el.style.display='none';
-  });
-  document.querySelectorAll('[onclick*="nuevo-dia"],[onclick*="nuevo-pago"]').forEach(el=>{
-    el.style.display='none';
-  });
-}
 
 // ======== HELPERS ========
 const fmt = n => 'S/ ' + (n||0).toLocaleString('es-EC',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -934,60 +756,8 @@ function weekRange(off) {
 
 // ======== API ========
 async function api(action, data={}) {
-  if(GERENCIA_READ_ONLY && ['saveCfg','saveDia','savePago','updatePago','deletePago','editPago'].includes(action)){
-    throw new Error('Modulo Gerencia en modo solo lectura. El Sheet fuente lo actualiza otra persona.');
-  }
-  const payload = {action,data};
-  if(GERENCIA_API_KEY) payload.apiKey = GERENCIA_API_KEY;
-  if(SCRIPT_URL){
-    try{
-      const res = await fetch(SCRIPT_URL+'?action='+action, {method:'POST', body:JSON.stringify(payload)});
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      const json = await res.json();
-      if(json.error) throw new Error(json.error);
-      return json;
-    }catch(e){ console.warn('Apps Script no disponible, usando Sheet publico:', e.message); }
-  }
-  return apiSheetPublico(action);
-}
-
-function gvizSheet(sheet){
-  return new Promise((resolve,reject)=>{
-    const cb='gviz_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const script=document.createElement('script');
-    const timer=setTimeout(()=>{cleanup();reject(new Error('Tiempo agotado leyendo '+sheet));},15000);
-    function cleanup(){clearTimeout(timer);delete window[cb];script.remove();}
-    window[cb]=payload=>{
-      cleanup();
-      if(!payload||payload.status!=='ok'){reject(new Error('No se pudo leer '+sheet));return;}
-      const cols=(payload.table.cols||[]).map(c=>String(c.label||c.id||'').replace(/\s+/g,''));
-      const rows=(payload.table.rows||[]).map(r=>{
-        const obj={};
-        cols.forEach((h,i)=>{const cell=(r.c||[])[i];obj[h]=cell?(cell.f!==undefined?cell.f:cell.v):'';});
-        return obj;
-      });
-      resolve(rows);
-    };
-    script.onerror=()=>{cleanup();reject(new Error('Error de red leyendo '+sheet));};
-    script.src='https://docs.google.com/spreadsheets/d/'+encodeURIComponent(GERENCIA_SHEET_ID)+'/gviz/tq?tqx=out:json;responseHandler:'+cb+'&sheet='+encodeURIComponent(sheet)+'&t='+Date.now();
-    document.head.appendChild(script);
-  });
-}
-
-async function apiSheetPublico(action){
-  if(action==='getDias') return {ok:true,dias:await gvizSheet('Dias')};
-  if(action==='getPagos') return {ok:true,pagos:await gvizSheet('Pagos')};
-  if(action==='getCfg'){
-    const rows=await gvizSheet('Config'); const cfg={};
-    rows.forEach(r=>{if(r.clave) cfg[r.clave]=Number(String(r.valor).replace(',','.'))||r.valor;});
-    return {ok:true,cfg};
-  }
-  if(action==='getAll'){
-    const [dias,pagos,cfgResp]=await Promise.all([gvizSheet('Dias'),gvizSheet('Pagos'),apiSheetPublico('getCfg')]);
-    return {ok:true,dias,pagos,cfg:cfgResp.cfg};
-  }
-  throw new Error('Accion no disponible en modo lectura publica: '+action);
-
+  if(!SCRIPT_URL) throw new Error('Sin URL');
+  const res = await fetch(SCRIPT_URL+'?action='+action, {method:'POST', body:JSON.stringify({action,data})});
   const json = await res.json();
   if(json.error) throw new Error(json.error);
   return json;
@@ -1005,7 +775,7 @@ async function guardarConfig() {
   const url=document.getElementById('cfg-url').value.trim();
   const s=parseFloat(document.getElementById('cfg-saldo').value)||0;
   if(!url){alert('Ingresa la URL.');return;}
-  SCRIPT_URL=url; localStorage.setItem('opa_gerencia_url',url);
+  SCRIPT_URL=url; localStorage.setItem('opa_url',url);
   cerrarModal('modal-cfg');
   spin('Conectando...');
   try { await api('saveCfg',{clave:'saldo0',valor:s}); saldo0=s; setConnected(true); await cargarDatos(); toast('Conectado ✓'); }
@@ -1130,7 +900,7 @@ async function marcarPagado(id){
 async function deletePagoFix(id){
   if(!confirm('¿Eliminar este pago?'))return;
   spin('Eliminando...');
-  try{await api('deletePago',{id:String(id)});pagos=pagos.filter(x=>+x.id!==+id);renderAll();toast('Eliminado');}
+  try{const url=SCRIPT_URL+'?action=deletePago';const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'deletePago',id:String(id)})});const json=await res.json();if(json.error)throw new Error(json.error);pagos=pagos.filter(x=>+x.id!==+id);renderAll();toast('Eliminado ✓');}
   catch(e){toast('Error: '+e.message,'var(--red)');}
   unspin();
 }
@@ -1162,7 +932,9 @@ async function guardarEditPago(){
   const montoFinal=pp>0?monto*(1-pp/100):monto;
   spin('Guardando...');
   try{
-    await api('editPago',{id,prov,cat,fecha,monto,pp,montoFinal,notas,estado});
+    const url=SCRIPT_URL+'?action=editPago';
+    const res=await fetch(url,{method:'POST',body:JSON.stringify({action:'editPago',data:{id,prov,cat,fecha,monto,pp,montoFinal,notas,estado}})});
+    const json=await res.json();
     const idx=pagos.findIndex(x=>String(x.id)===String(id));
     if(idx>=0)pagos[idx]={...pagos[idx],prov,cat,fecha,monto,pp,montoFinal,notas,estado};
     cerrarModal('modal-edit-pago');renderAll();toast('Actualizado ✓');
@@ -1465,9 +1237,14 @@ function exportXLSX(){
 
 // ======== INIT ========
 window.addEventListener('DOMContentLoaded',()=>{
-  sessionStorage.setItem(FC_AUTH_KEY,'ok');
-  document.getElementById('fc-login-bg').style.display='none';
-  iniciarFlujo();
+  const hoy=today();
+  document.getElementById('nd-fecha').value=hoy;
+  document.getElementById('nd-fecha-lbl').textContent=fmtDate(hoy);
+  document.getElementById('p-fecha').value=addDays(hoy,30);
+  document.getElementById('filtro-mes').value=hoy.slice(0,7);
+  document.getElementById('top-sub').textContent=fmtDate(hoy);
+  cargarConfigProyeccion();
+  cargarDatos();
 });
 </script>
 </body>
