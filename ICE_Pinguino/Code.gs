@@ -111,15 +111,10 @@ function login_(body) {
   const requestedRole = role_(body.rol);
   if (!usuario || !password || !requestedRole) throw new Error('Usuario o contraseña incorrecta.');
 
-  const user = rows_(requiredLoginSheet_()).find(row => {
-    const validPassword = row.Password_Hash
-      ? equals_(row.Password_Hash, hashPassword_(password, row.Password_Salt))
-      : text_(row['Contraseña']) === password;
-    return equals_(row.Usuario, usuario) && role_(row.Rol) === requestedRole && validPassword && !isInactive_(row.Activo);
-  });
+  const user = findLoginUser_(usuario, requestedRole, password);
   if (!user) throw new Error('Usuario o contraseña incorrecta.');
 
-  return createIceSession_(user);
+  return createIceSession_(user, requestedRole);
 }
 
 function principalLogin_(body) {
@@ -132,19 +127,32 @@ function principalLogin_(body) {
     throw new Error('No se pudo validar la sesión principal. Inicia sesión nuevamente.');
   }
 
-  const user = rows_(requiredLoginSheet_()).find(row => {
-    return equals_(row.Usuario, usuario) && role_(row.Rol) === requestedRole && !isInactive_(row.Activo);
-  });
-  if (!user) throw new Error('Usuario sin acceso activo a ICE.');
-  return createIceSession_(user);
+  const user = findLoginUser_(usuario, requestedRole, '');
+  if (!user) throw new Error('Usuario sin acceso activo a ICE. Verifica rol, usuario o razón en BD_Login.');
+  return createIceSession_(user, requestedRole);
 }
 
-function createIceSession_(user) {
+function findLoginUser_(usuario, requestedRole, password) {
+  const query = normalize_(usuario);
+  return rows_(requiredLoginSheet_()).find(row => {
+    const rowRole = role_(row.Rol);
+    if (rowRole !== requestedRole || isInactive_(row.Activo)) return false;
+    const matchesUser = [row.Usuario, row.Razon, row.Razón, row.Nombre, row.Razon_Usuario, row.Razon_Vendedor]
+      .some(value => normalize_(value) === query);
+    if (!matchesUser) return false;
+    if (!password) return true;
+    return row.Password_Hash
+      ? equals_(row.Password_Hash, hashPassword_(password, row.Password_Salt))
+      : text_(row['Contraseña']) === password;
+  });
+}
+
+function createIceSession_(user, effectiveRole) {
   const token = Utilities.getUuid() + Utilities.getUuid();
   const session = {
     usuario: text_(user.Usuario),
-    razon: text_(user.Razon || user.Usuario),
-    rol: role_(user.Rol),
+    razon: text_(user.Razon || user.Razón || user.Nombre || user.Usuario),
+    rol: effectiveRole || role_(user.Rol),
     loginAt: new Date().toISOString()
   };
   CacheService.getScriptCache().put('session:' + token, JSON.stringify(session), APP.SESSION_SECONDS);
@@ -245,22 +253,13 @@ function registrarVisita_(body, session) {
 
 function misVisitas_(session) {
   if (session.rol !== 'VENDEDOR') throw new Error('Módulo disponible solo para vendedores.');
-  const own = rows_(requiredSheet_(APP.VISITS))
-    .filter(row => equals_(row.Cod_Vendedor, session.usuario) && recordIsActive_(row));
-  const latest = {};
-  own.forEach(row => {
-    const key = text_(row.Serie_Cabinet);
-    const date = date_(row.Fecha_Visita);
-    if (!latest[key] || date > date_(latest[key].Fecha_Visita)) latest[key] = row;
-  });
-  return Object.values(latest).sort((a, b) => date_(b.Fecha_Visita) - date_(a.Fecha_Visita)).map(row => ({
-    serie: text_(row.Serie_Cabinet),
-    equipo: text_(row.Equipo),
-    codCliente: text_(row.Cod_Cliente),
-    sucursal: text_(row.Sucursal),
-    razonCliente: text_(row.Razon_Cliente),
-    ultimaVisita: iso_(row.Fecha_Visita)
-  }));
+  const user = text_(session.usuario);
+  const name = text_(session.razon || session.nombre);
+  return rows_(requiredSheet_(APP.VISITS))
+    .filter(recordIsActive_)
+    .filter(row => (user && equals_(row.Cod_Vendedor, user)) || (name && equals_(row.Razon_Vendedor, name)))
+    .sort((a, b) => date_(b.Fecha_Visita) - date_(a.Fecha_Visita))
+    .map(publicVisit_);
 }
 
 function resumen_(session) {
@@ -534,7 +533,13 @@ function json_(data) { return ContentService.createTextOutput(JSON.stringify(dat
 function text_(value) { return String(value ?? '').trim(); }
 function normalize_(value) { return text_(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(); }
 function equals_(a, b) { return normalize_(a) === normalize_(b); }
-function role_(value) { const role = normalize_(value); return role === 'ADMIN' || role === 'ADMINISTRADOR' ? 'ADMIN' : role === 'GERENCIA' || role === 'GERENTE' ? 'GERENCIA' : role === 'VENDEDOR' ? 'VENDEDOR' : ''; }
+function role_(value) {
+  const role = normalize_(value).replace(/[\s-]+/g, '_');
+  if (role === 'ADMIN' || role === 'ADMINISTRADOR') return 'ADMIN';
+  if (role === 'GERENCIA' || role === 'GERENTE' || role === 'SUPERVISOR') return 'GERENCIA';
+  if (role === 'VENDEDOR' || role === 'VENDEDORES_ICE' || role === 'VENDEDOR_ICE' || role === 'ICE') return 'VENDEDOR';
+  return '';
+}
 function isInactive_(value) { return ['NO', 'FALSE', '0', 'INACTIVO'].includes(normalize_(value)); }
 function number_(value) { const raw = text_(value).replace(',', '.'); return raw === '' ? NaN : Number(raw); }
 function valueOrBlank_(value) { const number = number_(value); return Number.isFinite(number) ? number : ''; }
