@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -1530,6 +1530,7 @@
               <select id="user" name="user" required disabled>
                 <option value="">Seleccione su usuario</option>
               </select>
+              <input id="userTyped" name="userTyped" type="text" autocomplete="username" placeholder="Digite su usuario" disabled hidden>
             </span>
           </label>
 
@@ -1588,7 +1589,7 @@
 
   <script>
     const LOGIN_API_URL = 'https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec';
-    const ICE_API_URL = 'https://script.google.com/macros/s/AKfycbzGMe5fVi1Q6R1NPr5WI_bcdaLSKfHaTaFjGp8cwMBZJ54_sPsyrhfkgnPTEQ6B7Tfn/exec';
+    const ICE_API_URL = 'https://script.google.com/macros/s/AKfycbztlHL2oHjPyH7BFw_awdO74ZVP_B1xHOPRxAnflXsc4d19PEAFwTb8wGPor_lmNAka0A/exec';
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
@@ -1618,6 +1619,17 @@
       return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", "\"": "&quot;" })[char]);
     }
 
+    async function readJsonResponse(response, serviceName) {
+      const raw = await response.text();
+      const trimmed = String(raw || "").trim();
+      if (!trimmed) throw new Error((serviceName || "API") + " no devolvió datos.");
+      if (trimmed[0] === "<") throw new Error((serviceName || "API") + " devolvió HTML en lugar de JSON. Verifica que la URL /exec publicada sea correcta.");
+      try {
+        return JSON.parse(trimmed);
+      } catch (error) {
+        throw new Error((serviceName || "API") + " no devolvió JSON válido: " + trimmed.slice(0, 140));
+      }
+    }
     function isInstalledApp() {
       return window.matchMedia("(display-mode: standalone)").matches ||
         window.matchMedia("(display-mode: fullscreen)").matches ||
@@ -1800,7 +1812,7 @@
         embed: true
       },
       Retorno: {
-        label: "BI Retornos",
+        label: "BI Devoluciones",
         symbol: "return",
         icon: "../Recuros_imagenes/reporte.png",
         path: "../Ventas/bi_retornos.html?embed=1",
@@ -1887,12 +1899,13 @@
     };
 
     const VENTAS_MODULES = ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
+    const ADMIN_VENTAS_MODULES = ["VentasOperativo", "MapaVentas", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
     const VENDEDOR_MODULES = ["NuevoDia", "Cartera", "Retorno", "MapaVentas"];
     const LOGISTICA_MODULES = ["Logistica", "Retorno"];
     const ICE_ADMIN_MODULES = ["IceResumen", "IceInventario", "IceReportes"];
     const ICE_OPERATIVO_MODULES = ["IceEscaneo", "IceMisVisitas"];
     const GERENCIA_MODULES = ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo"];
-    const ADMIN_GERENCIA_MODULES = [...VENTAS_MODULES, ...LOGISTICA_MODULES, ...GERENCIA_MODULES, ...ICE_ADMIN_MODULES];
+    const ADMIN_GERENCIA_MODULES = [...ADMIN_VENTAS_MODULES, ...LOGISTICA_MODULES, ...GERENCIA_MODULES, ...ICE_ADMIN_MODULES];
 
     const SYMBOLS = {
       map: "&#128506;&#65039;",
@@ -1945,6 +1958,7 @@
     const $ = (selector) => document.querySelector(selector);
     const roleSelect = $("#role");
     const userSelect = $("#user");
+    const userTyped = $("#userTyped");
     const form = $("#loginForm");
     const message = $("#message");
     const submitButton = $("#submitButton");
@@ -1968,8 +1982,15 @@
 
     function renderUsers(role) {
       const users = state.usersByRole[role] || [];
+      const isTypedUserRole = normalizeRoleName(role) === "VENDEDOR";
       userSelect.innerHTML = '<option value="">Seleccione su usuario</option>';
-      userSelect.disabled = users.length === 0;
+      userSelect.disabled = isTypedUserRole || users.length === 0;
+      userSelect.hidden = isTypedUserRole;
+      userSelect.required = !isTypedUserRole;
+      userTyped.disabled = !isTypedUserRole;
+      userTyped.required = isTypedUserRole;
+      userTyped.hidden = !isTypedUserRole;
+      if (!isTypedUserRole) userTyped.value = "";
       users.forEach((person) => {
         const option = document.createElement("option");
         option.value = person.usuario;
@@ -2127,6 +2148,13 @@
         return expandModules([...VENTAS_MODULES, ...ICE_ADMIN_MODULES]);
       }
       return expandModules(roleModules || (session && session.modules) || []);
+    }
+
+    function preferredInitialModule(session, visibleModules) {
+      const normalized = normalizeRoleName(session && (session.role || session.rol));
+      if ((normalized === "VENDEDORES_ICE" || normalized === "VENDEDOR_ICE" || normalized === "ICE") && visibleModules.includes("IceEscaneo")) return "IceEscaneo";
+      if ((normalized === "ADMIN" || normalized === "ADMINISTRADOR" || normalized === "GERENCIA" || normalized === "GERENTE") && visibleModules.includes("VentasOperativo")) return "VentasOperativo";
+      return "";
     }
 
     function areaGroupsForSession(session) {
@@ -2296,10 +2324,11 @@
     });
 
 
-    function roleForIce(role) {
+    function roleForIce(role, session = {}) {
       const normalized = String(role || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
       if (normalized === "ADMIN" || normalized === "ADMINISTRADOR") return "ADMIN";
       if (normalized === "GERENCIA" || normalized === "GERENTE") return "GERENCIA";
+      if (normalized === "SUPERVISOR" && ["JHONNY CHAFLA", "JHONY CHAFLA"].includes(normalizePersonName(session.user || session.usuario || session.nombre))) return "GERENCIA";
       return "VENDEDOR";
     }
 
@@ -2322,11 +2351,16 @@
 
     async function requestIceLogin(session, credentials) {
       const usuario = (credentials && credentials.user) || session.user || session.usuario || "";
-      const rol = roleForIce((credentials && credentials.role) || session.role || session.rol);
+      const rol = roleForIce((credentials && credentials.role) || session.role || session.rol, session);
       if (credentials && credentials.password) {
-        const passwordLogin = { action: "login", usuario, password: credentials.password, rol };
-        const result = await postIceAction(passwordLogin);
-        if (result && result.ok && result.token) return result;
+        try {
+          const passwordLogin = { action: "login", usuario, password: credentials.password, rol };
+          const result = await postIceAction(passwordLogin);
+          if (result && result.ok && result.token) return result;
+        } catch (error) {
+          // El login principal ya validó la identidad. Si la segunda validación ICE falla,
+          // se continúa con el token delegado para no bloquear módulos funcionales.
+        }
       }
       return postIceAction({
         action: "principalLogin",
@@ -2375,7 +2409,7 @@
         url.searchParams.set("token", session.iceToken);
         url.searchParams.set("usuario", session.user || session.usuario || "");
         url.searchParams.set("nombre", session.user || session.usuario || "");
-        url.searchParams.set("perfil", roleForIce(session.role || session.rol || "ADMIN"));
+        url.searchParams.set("perfil", roleForIce(session.role || session.rol || "ADMIN", session));
       }
       return url.pathname + url.search + url.hash;
     }
@@ -2421,7 +2455,8 @@
       renderModuleGroups(session, visibleModules);
 
       const savedModule = readStored(ACTIVE_MODULE_KEY);
-      const firstModule = visibleModules.includes(savedModule) ? savedModule : visibleModules[0];
+      const preferredModule = preferredInitialModule(session, visibleModules);
+      const firstModule = preferredModule || (visibleModules.includes(savedModule) ? savedModule : visibleModules[0]);
       if (firstModule) activateModule(firstModule, session, false);
       if (firstModule) history.replaceState({ moduleName: firstModule }, "", "#" + encodeURIComponent(firstModule));
       resetIdleTimer();
@@ -2585,7 +2620,7 @@
       try {
         const credentials = {
           role: roleSelect.value,
-          user: userSelect.value,
+          user: (normalizeRoleName(roleSelect.value) === "VENDEDOR" ? userTyped.value : userSelect.value).trim(),
           password: $("#password").value.trim()
         };
         let response = await authenticate(credentials);
@@ -2611,4 +2646,3 @@
   </script>
 </body>
 </html>
-

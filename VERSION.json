@@ -3,8 +3,10 @@
   "version": "1.2.0",
   "label": "OPAUSTRO v1.2",
   "channel": "prueba",
-  "publishedAt": "2026-06-30",
+  "publishedAt": "2026-07-02",
   "notes": [
+    "Hotfix: el login publicado apunta al Apps Script ICE correcto para que web y PWA preparen token y carguen submodulos ICE.",
+    "Hotfix: Mis visitas ICE conserva el formato del vendedor y muestra historial completo ordenado del ultimo escaneo al mas antiguo.",
     "ICE usa la sesión validada del login principal y no solicita una segunda contraseña dentro del módulo.",
     "La PWA instalada actualiza por clave de versión mayor/menor; v1.1 solo avisa al publicar v1.2 o al volver a una clave anterior.",
     "La cabecera y la barra inferior móvil se mantienen fijas; el zoom queda contenido al módulo cargado.",
@@ -21,7 +23,7 @@
     "El login no bloquea la app si un modulo falla; el error queda contenido en el modulo afectado.",
     "Se refuerza control de codificacion UTF-8 para evitar distorsion de tildes, signos y caracteres especiales."
   ],
-  "releaseKey": "1.2",
+  "releaseKey": "1.2-ice-hotfix-20260702",
   "forceUpdate": false,
   "rollback": false
 }
