@@ -1,9 +1,9 @@
-# Control De Versiones OPAUSTRO
+﻿# Control De Versiones OPAUSTRO
 
 ## Version activa
 
-- Version: `OPAUSTRO v1.1`
-- Tag recomendado: `opaustro-v1.1`
+- Version: `OPAUSTRO v1.3`
+- Tag recomendado: `opaustro-v1.3`
 - Rama publicada: `gh-pages`
 
 ## Estructura
@@ -35,7 +35,7 @@ git reset --hard opaustro-v1.0
 git push origin gh-pages --force-with-lease
 ```
 
-Despues se corrige la version nueva y se vuelve a publicar como `opaustro-v1.2`.
+Despues se corrige la version nueva y se vuelve a publicar como `opaustro-v1.3`.
 
 ## Reglas
 
@@ -44,3 +44,4 @@ Despues se corrige la version nueva y se vuelve a publicar como `opaustro-v1.2`.
 - Mantener Apps Script como capa de validacion y acceso a datos.
 - Antes de publicar, validar login, ventas, logistica, gerencia, ICE y PWA movil.
 - Cada version debe tener tag, changelog y `VERSION.json` actualizado.
+

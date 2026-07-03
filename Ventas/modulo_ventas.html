@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -40,6 +40,7 @@ body:after{content:"";position:fixed;inset:0;background-image:linear-gradient(rg
 .m-ger .bar{background:linear-gradient(90deg,#0e7490,#22d3ee)}.m-ger .ico{background:linear-gradient(135deg,#0e7490,#0891b2)}.m-ger .glow{background:#0891b2}
 .m-ret .bar{background:linear-gradient(90deg,#b45309,#f59e0b)}.m-ret .ico{background:linear-gradient(135deg,#b45309,#d97706)}.m-ret .glow{background:#d97706}
 .m-dia .bar{background:linear-gradient(90deg,#be123c,#fb7185)}.m-dia .ico{background:linear-gradient(135deg,#be123c,#e11d48)}.m-dia .glow{background:#e11d48}
+.m-vend .bar{background:linear-gradient(90deg,#2563eb,#38bdf8)}.m-vend .ico{background:linear-gradient(135deg,#1d4ed8,#0ea5e9)}.m-vend .glow{background:#0ea5e9}
 .footer{text-align:center;margin-top:30px;font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.04em}
 html.embed-mode body{padding:18px;align-items:flex-start}
 html.embed-mode .top{margin-bottom:22px}
@@ -52,7 +53,7 @@ if(new URLSearchParams(location.search).get('embed')==='1') document.documentEle
 <body>
 <div class="portal">
   <div class="top">
-    <div class="logo-wrap"><img src="./logo_opaustro.png" alt="Opaustro" onerror="this.parentNode.style.display='none'"></div>
+    <div class="logo-wrap"><img src="../Recuros_imagenes/logo_opaustro.png" alt="Opaustro" onerror="this.parentNode.style.display='none'"></div>
     <h1>Modulo Ventas</h1>
     <div class="accent"></div>
     <p>Selecciona el submodulo al que deseas acceder</p>
@@ -65,6 +66,10 @@ if(new URLSearchParams(location.search).get('embed')==='1') document.documentEle
     <a class="mod m-vta" href="./bi_ventas.html">
       <div class="bar"></div><div class="glow"></div>
       <div class="body"><div class="ico">📊</div><div class="name">BI VENTAS</div><div class="desc">Tablero Power BI</div><span class="arrow">→</span></div>
+    </a>
+    <a class="mod m-vend" href="./bi_vendedor.html">
+      <div class="bar"></div><div class="glow"></div>
+      <div class="body"><div class="ico">👤</div><div class="name">BI VENDEDOR</div><div class="desc">Tablero Power BI</div><span class="arrow">→</span></div>
     </a>
     <a class="mod m-car" href="./bi_cartera.html">
       <div class="bar"></div><div class="glow"></div>
@@ -87,3 +92,4 @@ if(new URLSearchParams(location.search).get('embed')==='1') document.documentEle
 </div>
 </body>
 </html>
+

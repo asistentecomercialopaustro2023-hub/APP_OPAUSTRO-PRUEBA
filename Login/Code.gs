@@ -4,7 +4,8 @@ const APP = {
   LOGIN: 'BD_Login',
   INVENTORY: 'BD_Inventario',
   VISITS: 'BD_Visitas',
-  HISTORY: 'BD_Historial'
+  HISTORY: 'BD_Historial',
+  ACCESS_LOG: 'BD_Accesos_App'
 };
 
 const LOGIN_CONFIG = {
@@ -26,6 +27,7 @@ function doGet(e) {
   try {
     const action = e && e.parameter && e.parameter.action;
     if (action === 'getLoginData') return json_(getLoginData());
+    if (action === 'getAccessLogs') return json_(getAccessLogs({}));
     if (action === 'diagnostico') return json_(diagnosticarLogin());
 
     return json_({
@@ -44,6 +46,8 @@ function doPost(e) {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (body.action === 'getLoginData') return json_(getLoginData());
     if (body.action === 'authenticate') return json_(authenticate(body.payload || {}));
+    if (body.action === 'recordAccessLog') return json_(recordAccessLog(body.payload || {}));
+    if (body.action === 'getAccessLogs') return json_(getAccessLogs(body.payload || {}));
     if (body.action === 'diagnostico') return json_(diagnosticarLogin());
     return json_({ success: false, message: 'Solicitud no valida.' });
   } catch (error) {
@@ -73,6 +77,7 @@ function configurarSistema() {
     'ID_Evento', 'Fecha_Evento', 'Serie_Cabinet', 'Tipo_Evento', 'Usuario_Admin',
     'Motivo', 'Datos_Anteriores', 'Datos_Nuevos'
   ]);
+  getOrCreateSheet_(ss, APP.ACCESS_LOG, accessLogHeaders_());
 
   initializeDefaults_();
   createDailyTrigger_();
@@ -254,6 +259,84 @@ function db_() {
   return SpreadsheetApp.openById(id);
 }
 
+function recordAccessLog(payload) {
+  try {
+    const user = String(payload.user || payload.usuario || '').trim();
+    const role = String(payload.role || payload.rol || '').trim();
+    if (!user || !role) return { success: false, message: 'Registro incompleto.' };
+    if (isAdminRole_(role)) return { success: true, ignored: true };
+
+    const at = payload.at ? new Date(payload.at) : new Date();
+    const safeDate = Number.isNaN(at.getTime()) ? new Date() : at;
+    const sheet = accessLogSheet_();
+    sheet.appendRow([
+      String(payload.id || Utilities.getUuid()),
+      safeDate,
+      user,
+      role,
+      String(payload.version || ''),
+      String(payload.device || ''),
+      String(payload.userAgent || '').slice(0, 500)
+    ]);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'No se pudo registrar el acceso.' };
+  }
+}
+
+function getAccessLogs(payload) {
+  try {
+    const limit = Math.min(Math.max(Number(payload.limit || 5000), 1), 10000);
+    const sheet = accessLogSheet_();
+    const values = sheet.getDataRange().getValues();
+    if (values.length < 2) return { success: true, logs: [] };
+    const headers = values[0].map((header) => String(header || '').trim());
+    const index = (name) => headerIndex_(headers, name);
+    const idIndex = index('ID_Acceso');
+    const dateIndex = index('Fecha_Hora');
+    const userIndex = index('Usuario');
+    const roleIndex = index('Rol');
+    const versionIndex = index('Version_App');
+    const deviceIndex = index('Dispositivo');
+    const logs = values.slice(1)
+      .map((row) => {
+        const value = row[dateIndex];
+        const date = value instanceof Date ? value : new Date(value);
+        return {
+          id: String(row[idIndex] || '').trim(),
+          at: Number.isNaN(date.getTime()) ? String(value || '').trim() : date.toISOString(),
+          user: String(row[userIndex] || '').trim(),
+          role: String(row[roleIndex] || '').trim(),
+          version: String(row[versionIndex] || '').trim(),
+          device: String(row[deviceIndex] || '').trim()
+        };
+      })
+      .filter((row) => row.user && row.role && row.at && !isAdminRole_(row.role))
+      .sort((a, b) => new Date(b.at) - new Date(a.at))
+      .slice(0, limit);
+    return { success: true, logs };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'No se pudo consultar el historial de accesos.' };
+  }
+}
+
+function pruneAccessLogs(daysToKeep) {
+  const days = Math.max(Number(daysToKeep || 90), 30);
+  const sheet = accessLogSheet_();
+  const values = sheet.getDataRange().getValues();
+  if (values.length <= 1) return 'Sin registros para depurar.';
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  for (let row = values.length; row >= 2; row--) {
+    const value = values[row - 1][1];
+    const date = value instanceof Date ? value : new Date(value);
+    if (!Number.isNaN(date.getTime()) && date < cutoff) sheet.deleteRow(row);
+  }
+  return 'Historial de accesos depurado.';
+}
+
 function requiredSheet_(name) {
   return getOrCreateSheet_(db_(), name);
 }
@@ -330,6 +413,21 @@ function createDailyTrigger_() {
 
 function tareaDiariaSistema() {
   initializeDefaults_();
+  accessLogSheet_();
+  pruneAccessLogs(90);
+}
+
+function accessLogHeaders_() {
+  return ['ID_Acceso', 'Fecha_Hora', 'Usuario', 'Rol', 'Version_App', 'Dispositivo', 'User_Agent'];
+}
+
+function accessLogSheet_() {
+  return getOrCreateSheet_(db_(), APP.ACCESS_LOG, accessLogHeaders_());
+}
+
+function isAdminRole_(role) {
+  const normalized = normalizeHeader_(role);
+  return normalized === 'admin' || normalized === 'administrador';
 }
 
 function normalizeHeader_(value) {

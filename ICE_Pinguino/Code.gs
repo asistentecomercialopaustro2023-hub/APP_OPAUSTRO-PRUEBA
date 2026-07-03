@@ -1,4 +1,4 @@
-/** CONTROL DE CABINETS · BACKEND GOOGLE APPS SCRIPT v3
+﻿/** CONTROL DE CABINETS · BACKEND GOOGLE APPS SCRIPT v3
  * Copiar todo este archivo directamente en Code.gs, sin envolverlo en myFunction().
  */
 
@@ -569,3 +569,4 @@ function hashPassword_(password, salt) {
   const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text_(salt) + '|' + text_(password), Utilities.Charset.UTF_8);
   return bytes.map(byte => ('0' + ((byte < 0 ? byte + 256 : byte).toString(16))).slice(-2)).join('');
 }
+

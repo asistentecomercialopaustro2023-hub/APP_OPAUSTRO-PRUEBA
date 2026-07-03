@@ -1,5 +1,12 @@
-# Changelog OPAUSTRO
+﻿# Changelog OPAUSTRO
 
+## OPAUSTRO v1.3 - 2026-07-03
+
+- Control de acceso queda sin cabecera interna duplicada y con sincronizacion compacta junto a la busqueda.
+- La barra lateral conserva scroll interno invisible sin desplazar el contenido ni el encabezado.
+- BI Vendedor queda integrado con icono propio y precarga dentro del flujo de actualizacion.
+- Tablero Control y Revision Costo muestran mensaje 404 limpio cuando falta el archivo local.
+- Se actualizo `VERSION.json`, `APP_VERSION`, `APP_RELEASE`, `APP_RELEASE_KEY` y `manifest.webmanifest` para activar actualizacion en apps instaladas.
 ## OPAUSTRO v1.1 - 2026-06-30
 
 - Integrado modulo ICE Pinguino dentro del menu principal con submodulos Resumen, Inventario, Reportes, Escaneo y Mis visitas.
@@ -14,3 +21,4 @@
 - Conservada la correccion de coordenadas positivas para Ecuador.
 - Agregada restauracion de ultima pantalla si el usuario sale y vuelve antes del cierre por inactividad.
 - Agregado `VERSION.json` para detectar nuevas versiones en la app instalada.
+

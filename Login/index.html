@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -1497,6 +1497,132 @@
       }
     }
 
+    body:has(.app-screen:not(.is-hidden)) {
+      overflow: hidden;
+    }
+
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) {
+      height: 100vh !important;
+      min-height: 100vh !important;
+      overflow: hidden !important;
+      grid-template-rows: 72px minmax(0, 1fr) !important;
+    }
+
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) .app-topbar {
+      position: relative;
+      z-index: 80;
+      flex-shrink: 0;
+    }
+
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) .app-body {
+      height: calc(100vh - 72px) !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) .module-sidebar {
+      height: calc(100vh - 72px) !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) .module-list {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      align-content: start;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) .module-list::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
+    .app-screen:not(.is-mobile-layout).sidebar-expanded .module-list {
+      gap: 8px;
+    }
+
+    .app-screen:not(.is-mobile-layout).sidebar-expanded .module-group {
+      padding-bottom: 7px;
+    }
+
+    .app-screen:not(.is-mobile-layout).sidebar-expanded .group-toggle {
+      min-height: 44px;
+      padding: 6px 8px;
+    }
+
+    .app-screen:not(.is-mobile-layout).sidebar-expanded .group-items {
+      gap: 4px;
+      padding: 5px 0 3px 16px;
+    }
+
+    .app-screen:not(.is-mobile-layout).sidebar-expanded .group-items .module-link {
+      min-height: 36px;
+      padding: 3px 4px;
+      font-size: .88rem;
+    }
+
+    .app-screen:not(.is-mobile-layout).sidebar-expanded .group-icon,
+    .app-screen:not(.is-mobile-layout).sidebar-expanded .module-symbol {
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
+      font-size: 1.2rem;
+    }
+
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) .module-workspace {
+      height: calc(100vh - 72px) !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+      grid-template-rows: 1fr !important;
+    }
+
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) .blank-panel.module-host,
+    .app-screen:not(.is-mobile-layout):not(.is-hidden) .module-frame {
+      height: 100% !important;
+      min-height: 0 !important;
+      overflow: auto !important;
+    }
+
+    @supports (height: 100dvh) {
+      .app-screen:not(.is-mobile-layout):not(.is-hidden) {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+      }
+
+      .app-screen:not(.is-mobile-layout):not(.is-hidden) .app-body,
+      .app-screen:not(.is-mobile-layout):not(.is-hidden) .module-sidebar,
+      .app-screen:not(.is-mobile-layout):not(.is-hidden) .module-workspace {
+        height: calc(100dvh - 72px) !important;
+      }
+    }
+
+    .app-screen.is-mobile-layout .module-sidebar {
+      overflow: hidden !important;
+    }
+
+    .app-screen.is-mobile-layout .module-list {
+      max-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .app-screen.is-mobile-layout .module-list::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+
   </style>
 </head>
 <body>
@@ -1593,9 +1719,9 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.2.0';
-    const APP_RELEASE = 'OPAUSTRO v1.2';
-    const APP_RELEASE_KEY = '1.2';
+    const APP_VERSION = '1.3.0';
+    const APP_RELEASE = 'OPAUSTRO v1.3';
+    const APP_RELEASE_KEY = '1.3';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
     let icePreparationPromise = null;
@@ -1706,6 +1832,7 @@
         "../ICE_Pinguino/inventario.html?v=" + encodeURIComponent(current),
         "../ICE_Pinguino/reportes.html?v=" + encodeURIComponent(current),
         "../Ventas/bi_ventas.html?v=" + encodeURIComponent(current),
+        "../Ventas/bi_vendedor.html?v=" + encodeURIComponent(current),
         "../Ventas/ventas.html?v=" + encodeURIComponent(current),
         "../Logistica/cabinets.html?v=" + encodeURIComponent(current),
         "../Gerencia/tablero.html?v=" + encodeURIComponent(current)
@@ -1777,6 +1904,13 @@
         icon: "../Recuros_imagenes/inventario.png",
         path: "../Admin/index.html"
       },
+      ControlAccesoApp: {
+        label: "Control de acceso",
+        symbol: "access",
+        icon: "../Recuros_imagenes/usuario.png",
+        path: "../Admin/control_acceso_app.html?embed=1",
+        embed: true
+      },
       Ventas: {
         label: "Ventas",
         icon: "../Recuros_imagenes/resumen.png",
@@ -1795,6 +1929,13 @@
         symbol: "chart",
         icon: "../Recuros_imagenes/resumen.png",
         path: "../Ventas/bi_ventas.html?embed=1",
+        embed: true
+      },
+      BiVendedor: {
+        label: "BI Vendedor",
+        symbol: "seller",
+        icon: "../Recuros_imagenes/usuario.png",
+        path: "../Ventas/bi_vendedor.html?embed=1",
         embed: true
       },
       Cartera: {
@@ -1898,15 +2039,17 @@
       Ventas: ["Bryan Nunez", "Milton Quezada", "Supervisor", "vendedores"]
     };
 
-    const VENTAS_MODULES = ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
-    const ADMIN_VENTAS_MODULES = ["VentasOperativo", "MapaVentas", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
-    const VENDEDOR_MODULES = ["NuevoDia", "Cartera", "Retorno", "MapaVentas"];
+    const VENTAS_MODULES = ["MapaVentas", "VentasOperativo", "BiVendedor", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
+    const ADMIN_VENTAS_MODULES = ["VentasOperativo", "BiVendedor", "MapaVentas", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
+    const VENDEDOR_MODULES = ["NuevoDia", "BiVendedor", "Cartera", "Retorno", "MapaVentas"];
     const CARTERA_MODULES = ["Cartera"];
     const LOGISTICA_MODULES = ["Logistica", "Retorno"];
     const ICE_ADMIN_MODULES = ["IceResumen", "IceInventario", "IceReportes"];
     const ICE_OPERATIVO_MODULES = ["IceEscaneo", "IceMisVisitas"];
     const GERENCIA_MODULES = ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo"];
-    const ADMIN_GERENCIA_MODULES = [...ADMIN_VENTAS_MODULES, ...LOGISTICA_MODULES, ...GERENCIA_MODULES, ...ICE_ADMIN_MODULES];
+    const ADMIN_APP_MODULES = ["ControlAccesoApp"];
+    const GERENCIA_ACCESS_MODULES = [...ADMIN_VENTAS_MODULES, ...LOGISTICA_MODULES, ...GERENCIA_MODULES, ...ICE_ADMIN_MODULES];
+    const ADMIN_GERENCIA_MODULES = [...ADMIN_APP_MODULES, ...GERENCIA_ACCESS_MODULES];
 
     const SYMBOLS = {
       map: "&#128506;&#65039;",
@@ -1917,16 +2060,25 @@
       day: "&#9728;&#65039;",
       dashboard: "&#128200;",
       cost: "&#128176;",
-      cash: "&#128181;"
+      cash: "&#128181;",
+      access: "&#128272;",
+      seller: "&#128100;"
     };
 
     const AREA_GROUPS = [
+      {
+        id: "Admin",
+        label: "Admin",
+        icon: "&#128272;",
+        iconPath: "../Recuros_imagenes/usuario.png",
+        modules: ["ControlAccesoApp"]
+      },
       {
         id: "Ventas",
         label: "Ventas",
         icon: "&#128200;",
         iconPath: "../Recuros_imagenes/resumen.png",
-        modules: ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"]
+        modules: ["MapaVentas", "VentasOperativo", "BiVendedor", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"]
       },
       {
         id: "Logistica",
@@ -2059,6 +2211,42 @@
       });
     }
 
+    function recordAccessLog(session, credentials) {
+      try {
+        const key = "opaustro_access_log";
+        const current = JSON.parse(localStorage.getItem(key) || "[]");
+        const user = String((session && (session.user || session.usuario || session.nombre)) || (credentials && credentials.user) || "").trim();
+        const role = String((session && (session.role || session.rol)) || (credentials && credentials.role) || "").trim();
+        if (!user || !role) return;
+        const normalizedRole = normalizeRoleName(role);
+        if (normalizedRole === "ADMIN" || normalizedRole === "ADMINISTRADOR") return;
+        const entry = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          user,
+          role,
+          at: new Date().toISOString(),
+          version: APP_VERSION,
+          device: isInstalledApp() ? "app_instalada" : "web",
+          userAgent: navigator.userAgent || ""
+        };
+        current.push(entry);
+        localStorage.setItem(key, JSON.stringify(current.slice(-5000)));
+        postAccessLog(entry);
+      } catch (error) {}
+    }
+
+    function postAccessLog(entry) {
+      if (!LOGIN_API_URL || !entry) return;
+      try {
+        fetch(LOGIN_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "recordAccessLog", payload: entry }),
+          keepalive: true
+        }).catch(() => {});
+      } catch (error) {}
+    }
+
     function createModuleButton(moduleName, session) {
       const module = MODULE_DEFINITIONS[moduleName] || {
         label: moduleName,
@@ -2100,7 +2288,7 @@
     function modulesForRole(role) {
       const normalized = normalizeRoleName(role);
       if (normalized === "ADMIN" || normalized === "ADMINISTRADOR") return ADMIN_GERENCIA_MODULES;
-      if (normalized === "GERENCIA" || normalized === "GERENTE") return ADMIN_GERENCIA_MODULES;
+      if (normalized === "GERENCIA" || normalized === "GERENTE") return GERENCIA_ACCESS_MODULES;
       if (normalized === "LOGISTICA") return LOGISTICA_MODULES;
       if (normalized === "TECNICO" || normalized === "TECNICO_LOGISTICA") return ["Logistica"];
       if (normalized === "SUPERVISOR") return VENTAS_MODULES;
@@ -2457,8 +2645,11 @@
       renderModuleGroups(session, visibleModules);
 
       const savedModule = readStored(ACTIVE_MODULE_KEY);
+      const hashModule = decodeURIComponent(String(location.hash || "").replace(/^#/, ""));
       const preferredModule = preferredInitialModule(session, visibleModules);
-      const firstModule = preferredModule || (visibleModules.includes(savedModule) ? savedModule : visibleModules[0]);
+      const firstModule = visibleModules.includes(hashModule)
+        ? hashModule
+        : (visibleModules.includes(savedModule) ? savedModule : (preferredModule || visibleModules[0]));
       if (firstModule) activateModule(firstModule, session, false);
       if (firstModule) history.replaceState({ moduleName: firstModule }, "", "#" + encodeURIComponent(firstModule));
       resetIdleTimer();
@@ -2632,6 +2823,7 @@
           return;
         }
 
+        recordAccessLog(response, credentials);
         renderApp(response);
         startIcePreparation(response, credentials);
       } catch (error) {
@@ -2648,3 +2840,8 @@
   </script>
 </body>
 </html>
+
+
+
+
+

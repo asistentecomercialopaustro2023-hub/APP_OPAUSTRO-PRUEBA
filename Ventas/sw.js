@@ -4,10 +4,10 @@ const APP_SHELL = [
   './index.html',
   './auth.js',
   './manifest.webmanifest',
-  './logo_opaustro.png',
-  './magnum.avif',
-  './icon-192.png',
-  './icon-512.png'
+  '../Recuros_imagenes/logo_opaustro.png',
+  '../Recuros_imagenes/magnum.avif',
+  '../Recuros_imagenes/icon-192.png',
+  '../Recuros_imagenes/icon-512.png'
 ];
 
 self.addEventListener('install', event => {

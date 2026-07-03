@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
@@ -74,6 +74,41 @@
     white-space: nowrap;
   }
   #btn-actualizar:hover { background: var(--navy); }
+  .xlsx-sync{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    background:transparent;
+    color:#64748b;
+    border:1px solid #d8e0e8;
+    border-radius:999px;
+    padding:4px 7px;
+    font-size:11px;
+    white-space:nowrap;
+  }
+  .xlsx-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#f0a500;
+    box-shadow:0 0 7px rgba(240,165,0,.45);
+  }
+  .xlsx-sync.ok{border-color:#bdebd8;color:#047857;background:#f7fffb}
+  .xlsx-sync.err{border-color:#ffd3dc;color:#be123c;background:#fff8fa}
+  .xlsx-sync.ok .xlsx-dot{background:#10b981;box-shadow:0 0 7px rgba(16,185,129,.45)}
+  .xlsx-sync.err .xlsx-dot{background:#e11d48;box-shadow:0 0 7px rgba(225,29,72,.45)}
+  .xlsx-sync button{
+    border:1px solid #cbd5e1;
+    background:#fff;
+    color:#0f5d7f;
+    border-radius:999px;
+    padding:3px 8px;
+    font-size:11px;
+    font-weight:800;
+    cursor:pointer;
+  }
+  .xlsx-sync button:hover{background:#eef7fb}
+  #filtros .xlsx-sync{margin-left:auto}
 
   /* ── FILTROS ── */
   #filtros {
@@ -547,7 +582,7 @@
   <a class="tg-login-portal-back" href="./index.html">← Portal Opaustro</a>
   <div class="tg-sel-wrap">
     <div class="tg-sel-head">
-      <img src="logo.png" alt="Opaustro" onerror="this.style.display='none'">
+      <img src="../Recuros_imagenes/logo.png" alt="Opaustro" onerror="this.style.display='none'">
       <h2>Gerencia</h2>
       <p>Selecciona el módulo al que deseas acceder</p>
     </div>
@@ -577,7 +612,7 @@
   <button type="button" class="tg-login-portal-back" onclick="tgVolverSelector()">← Volver</button>
   <form class="tg-login-card" onsubmit="return tgDoLogin(event)">
     <div class="tg-login-top">
-      <img class="tg-login-logo" src="logo.png" alt="Opaustro" onerror="this.style.display='none'">
+      <img class="tg-login-logo" src="../Recuros_imagenes/logo.png" alt="Opaustro" onerror="this.style.display='none'">
       <div class="tg-login-title">Tablero Gerencial</div>
       <div class="tg-login-sub">Opaustro Cía. Ltda. · Acceso restringido</div>
     </div>
@@ -605,7 +640,7 @@
 
 <!-- HEADER -->
 <header>
-  <img src="logo.png" alt="Opaustro" onerror="this.style.display='none'"/>
+  <img src="../Recuros_imagenes/logo.png" alt="Opaustro" onerror="this.style.display='none'"/>
   <h1>TABLERO GERENCIAL EMPRESA OPAUSTRO CÍA. LTDA.</h1>
   <button id="btn-actualizar" onclick="cargarDesdeServidor()">🔄 Actualizar datos</button>
   <button onclick="tgLogout()" style="background:transparent;border:1px solid #ddd;color:#687386;padding:8px 14px;border-radius:8px;font-size:13px;cursor:pointer;">Salir</button>
@@ -626,6 +661,11 @@
     <select id="sel-linea" onchange="aplicarFiltros()"><option value="TODAS">TODAS</option></select>
   </div>
   <button id="btn-limpiar" onclick="limpiarFiltros()">✕ Limpiar filtros</button>
+  <div class="xlsx-sync" aria-live="polite">
+    <span class="xlsx-dot" id="xlsx-dot"></span>
+    <span id="xlsx-status">Verificando archivo</span>
+    <button type="button" id="xlsx-sync-btn" onclick="cargarDesdeServidor()">↻ Sync</button>
+  </div>
 </div>
 
 <!-- TABS -->
@@ -634,7 +674,7 @@
   <button class="tab-btn" onclick="switchTab(1)">📊 Sin Adicionales</button>
   <button class="tab-btn" onclick="switchTab(2)">💸 Análisis de Gastos</button>
   <button class="tab-btn" onclick="switchTab(3)">🚚 Transporte</button>
-  <button class="tab-btn" onclick="switchTab(4)">🔄 Retornos</button>
+  <button class="tab-btn" onclick="switchTab(4)">🔄 BI Devoluciones</button>
   <button class="tab-btn" onclick="switchTab(5)">💳 Descuentos</button>
   <button class="tab-btn" onclick="switchTab(6)">📌 NCS Pendientes</button>
   <button class="tab-btn" onclick="switchTab(7)">💰 NCS Financieras</button>
@@ -707,16 +747,16 @@
     </div>
   </div>
 
-  <!-- TAB 4: RETORNOS -->
+  <!-- TAB 4: DEVOLUCIONES -->
   <div class="tab-panel" id="panel-4">
-    <div class="section-title">🔄 Detalle de Retornos</div>
+    <div class="section-title">🔄 Detalle de BI Devoluciones</div>
     <div class="filtro-group" style="margin-bottom:16px">
       <label>Canal</label>
       <select id="sel-canal" onchange="renderRetornos()"><option value="TODOS">TODOS</option></select>
     </div>
     <div class="kpi-grid" id="kpi-retornos"></div>
     <hr class="divider"/>
-    <div class="chart-box" style="margin-bottom:18px"><h3>Retornos por Día</h3><canvas id="chart-retornos"></canvas></div>
+    <div class="chart-box" style="margin-bottom:18px"><h3>BI Devoluciones por Día</h3><canvas id="chart-retornos"></canvas></div>
     <div class="two-col">
       <div>
         <div class="section-title" style="font-size:13px">Por Vendedor</div>
@@ -955,17 +995,52 @@ function notifyHostStatus(status, message){
   } catch(e) {}
 }
 
+function setXlsxStatus(status, message){
+  const box = document.querySelector('.xlsx-sync');
+  const text = document.getElementById('xlsx-status');
+  if(!box || !text) return;
+  box.classList.remove('ok','err');
+  if(status) box.classList.add(status);
+  text.textContent = message || '';
+}
+
+function renderDataLoadError(fileName){
+  return `<div style="text-align:center;color:#91a7b6">
+    <div style="font-size:18px;font-weight:700;color:#e11d48">✕ Error 404 error en la carga de datos</div>
+    <div style="font-size:10px;margin-top:6px;color:#9db0bd">${fileName} no encontrado</div>
+  </div>`;
+}
+
+async function validarArchivoXlsx(){
+  if(location.protocol === 'file:'){
+    setXlsxStatus('err','Abrir con servidor local');
+    return false;
+  }
+  try{
+    const resp = await fetch(ARCHIVO_XLSX + '?check=' + Date.now(), { method:'HEAD', cache:'no-store' });
+    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+    setXlsxStatus('ok','Conectado');
+    return true;
+  }catch(error){
+    setXlsxStatus('err','Archivo no encontrado');
+    return false;
+  }
+}
+
 async function cargarDesdeServidor(){
+  setXlsxStatus('', 'Sincronizando...');
   if(location.protocol === 'file:'){
     const est=document.getElementById('estado-carga') || document.getElementById('estadoCarga');
     if(est){
-      est.innerHTML = '❌ Error al cargar datos: el navegador bloquea la lectura local de TABLERO.xlsx cuando se abre como archivo.<br><small>Para pruebas locales abre el sistema desde un servidor local, por ejemplo: http://127.0.0.1:8765/Login/index.html. En el repositorio publicado funcionará porque se servirá por HTTP/HTTPS.</small>';
+      est.innerHTML = renderDataLoadError(ARCHIVO_XLSX);
     }
+    setXlsxStatus('err','Abrir con servidor local');
     return;
   }
   if(typeof XLSX === 'undefined'){
     const est=document.getElementById('estado-carga') || document.getElementById('estadoCarga');
-    if(est){ est.innerHTML = '❌ Error al cargar datos: no se cargó la librería XLSX. Verifica conexión a internet o agrega la librería local.'; }
+    if(est){ est.innerHTML = renderDataLoadError(ARCHIVO_XLSX); }
+    setXlsxStatus('err','XLSX no disponible');
     return;
   }
   // cargar también TALENTO_HUMANO.xlsx en paralelo
@@ -988,11 +1063,13 @@ async function cargarDesdeServidor(){
     poblarFiltros();
     const est = $('estado-carga');
     if(est) est.style.display = 'none';
+    setXlsxStatus('ok','Conectado');
     notifyHostStatus('ok','Datos conectados');
     switchTab(activeTab);
   } catch(err){
     const est = $('estado-carga');
-    if(est){ est.innerHTML = `❌ Error al cargar datos: ${err.message}<br><small>Verifica que TABLERO.xlsx esté en la misma carpeta que este HTML en el repositorio.</small>`; }
+    if(est){ est.innerHTML = renderDataLoadError(ARCHIVO_XLSX); }
+    setXlsxStatus('err','Error archivo');
     console.error(err);
   } finally { loading(false); }
 }
@@ -1148,7 +1225,7 @@ function procesarSheets(){
     };
   });
 
-  // RETORNOS
+  // DEVOLUCIONES
   sheets.retornos = sheetToJSON('RETORNOS').map(r=>{
     const obj={};
     Object.keys(r).forEach(k=>{ obj[k.trim().toUpperCase()] = r[k]; });
@@ -1308,7 +1385,7 @@ function poblarFiltros(){
   selRuta.innerHTML = '<option value="TODAS">TODAS</option>';
   rutas.forEach(r=>{ selRuta.innerHTML += `<option value="${r}">${r}</option>`; });
 
-  // Canales retornos
+  // Canales devoluciones
   const canales = [...new Set(sheets.retornos.map(r=>r.CANAL))].filter(Boolean).sort();
   const selCanal = $('sel-canal');
   selCanal.innerHTML = '<option value="TODOS">TODOS</option>';
@@ -1763,7 +1840,7 @@ function renderTransporte(f=getFiltros()){
 }
 
 // ══════════════════════════════════════════════════
-// TAB 4 – RETORNOS
+// TAB 4 – DEVOLUCIONES
 // ══════════════════════════════════════════════════
 const EXCLUIR_MOTIVOS=['Error de digitación ( 21 )','Problemas con Congelador (Averiado) ( 24 )'];
 let _retData=[];
@@ -1816,7 +1893,7 @@ function renderRetornos(f=getFiltros()){
   const pct=totalVenta?totalRet/totalVenta*100:0;
 
   renderKPI('kpi-retornos',[
-    {label:'📉 % Retornos / Venta',value:fmtPct(pct),cls:pct<2?'green':pct<5?'amber':'red'},
+    {label:'📉 % Devoluciones / Venta',value:fmtPct(pct),cls:pct<2?'green':pct<5?'amber':'red'},
     {label:'💰 Total Importe',value:fmt$(totalRet)},
   ]);
 
@@ -1831,7 +1908,7 @@ function renderRetornos(f=getFiltros()){
   destroyChart('chart-retornos');
   charts['chart-retornos']=new Chart($('chart-retornos'),{
     type:'line',
-    data:{labels:fechas,datasets:[{label:'Retornos',data:fechas.map(f=>porDia[f]),borderColor:'#E05252',backgroundColor:'rgba(224,82,82,.1)',fill:true,tension:.3,pointRadius:2}]},
+    data:{labels:fechas,datasets:[{label:'Devoluciones',data:fechas.map(f=>porDia[f]),borderColor:'#E05252',backgroundColor:'rgba(224,82,82,.1)',fill:true,tension:.3,pointRadius:2}]},
     options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt$(v)}}}}
   });
 
@@ -2641,3 +2718,5 @@ function renderRebate(f=getFiltros()){
 </script>
 </body>
 </html>
+
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -40,6 +40,7 @@ body:after{content:"";position:fixed;inset:0;background-image:linear-gradient(rg
 .m-car .bar{background:linear-gradient(90deg,#7c3aed,#a855f7);}.m-car .ico{background:linear-gradient(135deg,#7c3aed,#9d4edd);}.m-car .glow{background:#9d4edd;}
 .m-ger .bar{background:linear-gradient(90deg,#0e7490,#22d3ee);}.m-ger .ico{background:linear-gradient(135deg,#0e7490,#0891b2);}.m-ger .glow{background:#0891b2;}
 .m-ret .bar{background:linear-gradient(90deg,#b45309,#f59e0b);}.m-ret .ico{background:linear-gradient(135deg,#b45309,#d97706);}.m-ret .glow{background:#d97706;}
+.m-vend .bar{background:linear-gradient(90deg,#2563eb,#38bdf8);}.m-vend .ico{background:linear-gradient(135deg,#1d4ed8,#0ea5e9);}.m-vend .glow{background:#0ea5e9;}
 .footer{text-align:center;margin-top:34px;font-size:11px;color:rgba(255,255,255,.28);letter-spacing:.04em;}
 @media(max-width:540px){.top h1{font-size:22px;}.grid{grid-template-columns:1fr;gap:14px;}.mod{min-height:150px;}}
 </style>
@@ -48,7 +49,7 @@ body:after{content:"";position:fixed;inset:0;background-image:linear-gradient(rg
 <a class="back" href="./index.html">← Portal Opaustro</a>
 <div class="portal">
   <div class="top">
-    <div class="logo-wrap"><img src="./logo_opaustro.png" alt="Opaustro" onerror="this.parentNode.style.display='none'"></div>
+    <div class="logo-wrap"><img src="../Recuros_imagenes/logo_opaustro.png" alt="Opaustro" onerror="this.parentNode.style.display='none'"></div>
     <h1>Ventas</h1>
     <div class="accent"></div>
     <p>Selecciona el módulo al que deseas acceder</p>
@@ -70,6 +71,16 @@ body:after{content:"";position:fixed;inset:0;background-image:linear-gradient(rg
       <div class="body">
         <div class="ico">📊</div>
         <div class="name">VENTAS</div>
+        <div class="desc">Tablero Power BI</div>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+    <a class="mod m-vend" href="./bi_vendedor.html">
+      <div class="bar"></div>
+      <div class="glow"></div>
+      <div class="body">
+        <div class="ico">👤</div>
+        <div class="name">BI VENDEDOR</div>
         <div class="desc">Tablero Power BI</div>
         <span class="arrow">→</span>
       </div>
@@ -116,3 +127,5 @@ if('serviceWorker' in navigator){
 </script>
 </body>
 </html>
+
+
