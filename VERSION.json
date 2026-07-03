@@ -3,8 +3,9 @@
   "version": "1.2.0",
   "label": "OPAUSTRO v1.2",
   "channel": "prueba",
-  "publishedAt": "2026-07-02",
+  "publishedAt": "2026-07-03",
   "notes": [
+    "Hotfix: el rol Cartera accede exclusivamente al submodulo BI Cartera.",
     "Hotfix: el login publicado apunta al Apps Script ICE correcto para que web y PWA preparen token y carguen submodulos ICE.",
     "Hotfix: Mis visitas ICE conserva el formato del vendedor y muestra historial completo ordenado del ultimo escaneo al mas antiguo.",
     "ICE usa la sesión validada del login principal y no solicita una segunda contraseña dentro del módulo.",
@@ -23,7 +24,7 @@
     "El login no bloquea la app si un modulo falla; el error queda contenido en el modulo afectado.",
     "Se refuerza control de codificacion UTF-8 para evitar distorsion de tildes, signos y caracteres especiales."
   ],
-  "releaseKey": "1.2-ice-hotfix-20260702",
+  "releaseKey": "1.2-cartera-hotfix-20260703",
   "forceUpdate": false,
   "rollback": false
 }

@@ -1901,6 +1901,7 @@
     const VENTAS_MODULES = ["MapaVentas", "VentasOperativo", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
     const ADMIN_VENTAS_MODULES = ["VentasOperativo", "MapaVentas", "Cartera", "VentasGerencial", "Retorno", "NuevoDia"];
     const VENDEDOR_MODULES = ["NuevoDia", "Cartera", "Retorno", "MapaVentas"];
+    const CARTERA_MODULES = ["Cartera"];
     const LOGISTICA_MODULES = ["Logistica", "Retorno"];
     const ICE_ADMIN_MODULES = ["IceResumen", "IceInventario", "IceReportes"];
     const ICE_OPERATIVO_MODULES = ["IceEscaneo", "IceMisVisitas"];
@@ -2103,7 +2104,7 @@
       if (normalized === "LOGISTICA") return LOGISTICA_MODULES;
       if (normalized === "TECNICO" || normalized === "TECNICO_LOGISTICA") return ["Logistica"];
       if (normalized === "SUPERVISOR") return VENTAS_MODULES;
-      if (normalized === "CARTERA") return ["Cartera"];
+      if (normalized === "CARTERA") return CARTERA_MODULES;
       if (normalized === "VENDEDOR" || normalized === "VENTAS") return VENDEDOR_MODULES;
       if (normalized === "VENDEDORES_ICE" || normalized === "VENDEDOR_ICE" || normalized === "ICE") return ICE_OPERATIVO_MODULES;
       return null;
