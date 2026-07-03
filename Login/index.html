@@ -2103,6 +2103,7 @@
       if (normalized === "LOGISTICA") return LOGISTICA_MODULES;
       if (normalized === "TECNICO" || normalized === "TECNICO_LOGISTICA") return ["Logistica"];
       if (normalized === "SUPERVISOR") return VENTAS_MODULES;
+      if (normalized === "CARTERA") return ["Cartera"];
       if (normalized === "VENDEDOR" || normalized === "VENTAS") return VENDEDOR_MODULES;
       if (normalized === "VENDEDORES_ICE" || normalized === "VENDEDOR_ICE" || normalized === "ICE") return ICE_OPERATIVO_MODULES;
       return null;
