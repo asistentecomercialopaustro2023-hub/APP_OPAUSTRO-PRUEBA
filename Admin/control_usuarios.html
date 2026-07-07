@@ -1,0 +1,368 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Control de usuarios</title>
+  <style>
+    :root{
+      --bg:#eef5fa;--panel:#fff;--text:#062b49;--muted:#6d8497;--brand:#0b7db2;--brand2:#0f9ccc;--line:#d5e3ec;
+      --ok:#008060;--warn:#b7791f;--bad:#b42318;--soft:#f6fbfe;--shadow:0 18px 44px rgba(6,43,73,.1)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif;padding:24px}
+    .wrap{max-width:1260px;margin:0 auto;display:grid;gap:16px}
+    .hero,.search-panel,.panel{background:linear-gradient(180deg,#fff,#f9fdff);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+    .hero{display:grid;grid-template-columns:1fr 250px;gap:16px;align-items:stretch;padding:18px}
+    .hero-copy{display:flex;gap:14px;align-items:center}
+    .hero-icon{width:54px;height:54px;border-radius:16px;background:#e8f6fc;border:1px solid #c8e4f0;display:grid;place-items:center}.hero-icon svg{width:30px;height:30px}
+    .eyebrow{display:block;color:var(--brand);font-size:11px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;margin-bottom:4px}
+    h1{margin:0;font-size:25px;line-height:1.12}
+    .hero p{margin:7px 0 0;color:var(--muted);font-size:14px;line-height:1.45}
+    .add-user-card{border:1px solid #b9def0;border-radius:17px;background:linear-gradient(135deg,#e7f7fd,#fff);display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:center;padding:14px;text-align:left;cursor:pointer;color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,.85);transition:.18s ease}
+    .add-user-card:hover{transform:translateY(-1px);box-shadow:0 16px 32px rgba(6,43,73,.11)}
+    .add-avatar{width:48px;height:48px;border-radius:16px;background:#fff;border:1px solid #cfe5ef;display:grid;place-items:center}.add-avatar svg{width:26px;height:26px}
+    .add-user-card strong{display:block;font-size:16px}
+    .add-user-card span{display:block;color:var(--muted);font-size:12px;font-weight:750;margin-top:3px}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .kpi{background:#fff;border:1px solid #dbe8f0;border-radius:16px;padding:14px}
+    .kpi strong{display:block;font-size:24px;line-height:1;color:var(--text)}
+    .kpi span{display:block;margin-top:6px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:900}
+    .search-panel{padding:16px}
+    .toolbar{display:grid;grid-template-columns:220px 1fr 190px auto auto;gap:12px;align-items:end}
+    label{display:grid;gap:6px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:850}
+    input,select{width:100%;border:1px solid #c7d8e4;border-radius:11px;padding:12px 13px;font-size:14px;color:var(--text);background:#fff;outline:none}
+    input:focus,select:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(11,125,178,.12)}
+    button{border:0;border-radius:11px;padding:12px 16px;font-weight:900;cursor:pointer;font-family:inherit}
+    .primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+    .ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+    .danger{background:#fff1f1;color:var(--bad);border:1px solid #ffc9c9}
+    .panel{overflow:hidden}
+    .panel-title{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(--line);font-weight:950}
+    .status{font-size:12px;color:var(--muted);font-weight:800}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:12px 14px;border-bottom:1px solid #e6eef4;text-align:left;vertical-align:middle}
+    th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#5d7486;background:#f5f9fc}
+    .user{font-weight:950}
+    .pill{display:inline-flex;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:900}
+    .pill.activo{background:#e8fff6;color:var(--ok)}
+    .pill.vacaciones{background:#fff7df;color:var(--warn)}
+    .pill.retirado{background:#fff0f0;color:var(--bad)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .message{color:var(--muted);font-weight:800;font-size:13px}.clear-filter{width:44px;height:44px;padding:0;border-radius:13px;background:#fff1f1;color:#b42318;border:1px solid #ffc9c9;font-size:20px;line-height:1}.role-entry{display:grid;gap:8px}.role-new{display:none}.role-entry.is-new .role-new{display:block}.confirm-card{display:none;margin-top:14px;border:1px solid #b9def0;border-radius:14px;background:#f4fbff;padding:13px;color:var(--text)}.confirm-card.is-visible{display:block}.confirm-card strong{display:block;margin-bottom:8px}.confirm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:13px}.confirm-grid span{color:var(--muted);font-weight:800}.confirm-grid b{display:block;color:var(--text)}
+    .modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(2,23,39,.48);display:grid;place-items:center;padding:18px}
+    .modal-backdrop[hidden]{display:none}
+    .modal{width:min(720px,100%);background:#fff;border:1px solid #cfe0eb;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.24);overflow:hidden}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fbfdff,#f4f9fc)}
+    .modal-head h2{margin:0;font-size:20px}
+    .close{width:38px;height:38px;border-radius:12px;padding:0;background:#fff;border:1px solid var(--line);font-size:20px;color:var(--muted)}
+    .modal-body{padding:18px 20px}
+    .editor-grid{display:grid;grid-template-columns:170px 1fr;gap:13px}
+    .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+    html.embed-mode body{padding:22px}
+    @media(max-width:920px){.hero{grid-template-columns:1fr}.toolbar,.editor-grid,.kpis{grid-template-columns:1fr}.actions button,.modal-actions button{flex:1}.modal-actions{display:flex}}
+    @media(max-width:620px){body{padding:14px}.hero-copy{align-items:flex-start}h1{font-size:22px}.panel-title{display:grid;gap:6px}}
+  </style>
+  <script>
+    if(new URLSearchParams(location.search).get("embed")==="1") document.documentElement.classList.add("embed-mode");
+  </script>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero" aria-label="Control de usuarios">
+      <div class="hero-copy">
+        <div class="hero-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#0b7db2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div>
+          <span class="eyebrow">Directorio operativo</span>
+          <h1>Control de usuarios</h1>
+          <p>Administra roles, estados y accesos del personal desde una vista limpia y rápida.</p>
+        </div>
+      </div>
+      <button class="add-user-card" id="addUserCard" type="button">
+        <span class="add-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#0b7db2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span><strong>Añadir usuario</strong><span>Crear nuevo acceso</span></span>
+      </button>
+    </section>
+
+    <section class="kpis" aria-label="Resumen de usuarios">
+      <div class="kpi"><strong id="kpiTotal">0</strong><span>Total usuarios</span></div>
+      <div class="kpi"><strong id="kpiActive">0</strong><span>Activos</span></div>
+      <div class="kpi"><strong id="kpiVacation">0</strong><span>Vacaciones</span></div>
+      <div class="kpi"><strong id="kpiRetired">0</strong><span>Retirados</span></div>
+    </section>
+
+    <section class="search-panel" aria-label="Búsqueda de usuarios">
+      <form class="toolbar" id="filterForm">
+        <label>Rol
+          <select id="roleFilter">
+            <option value="">Todos los roles</option>
+          </select>
+        </label>
+        <label>Usuario
+          <input id="search" list="userSuggestions" placeholder="Escribe parte del usuario o nombre">
+          <datalist id="userSuggestions"></datalist>
+        </label>
+        <label>Estado
+          <select id="statusFilter">
+            <option value="">Todos</option>
+            <option value="Activo">Activo</option>
+            <option value="Vacaciones">Vacaciones</option>
+            <option value="Retirado">Retirado</option>
+          </select>
+        </label>
+        <button class="primary" type="submit">Buscar</button>
+        <button class="clear-filter" id="clearFilters" type="button" title="Borrar filtros" aria-label="Borrar filtros">×</button>
+      </form>
+      <div class="message" id="message" style="margin-top:10px"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <span>Usuarios y roles</span>
+        <span class="status" id="tableStatus">0 usuarios</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rol</th>
+              <th>Usuario</th>
+              <th>Nombre / Razón</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="userModal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <div>
+          <span class="eyebrow">Gestión de usuario</span>
+          <h2 id="modalTitle">Añadir usuario</h2>
+        </div>
+        <button class="close" id="closeModal" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="userForm">
+          <input id="row" type="hidden">
+          <div class="editor-grid">
+            <label>Rol
+              <span class="role-entry" id="roleEntry">
+                <select id="rolSelect" required></select>
+                <input class="role-new" id="rol" placeholder="Ingrese el nuevo rol">
+              </span>
+            </label>
+            <label>Nombre / Razón
+              <input id="razon" placeholder="Nombre visible">
+            </label>
+            <label>Usuario
+              <input id="usuario" required placeholder="Usuario">
+            </label>
+            <label>Estado
+              <select id="estado">
+                <option>Activo</option>
+                <option>Vacaciones</option>
+                <option>Retirado</option>
+              </select>
+            </label>
+            <label>Contraseña
+              <input id="password" type="password" placeholder="Ingrese una contraseña">
+            </label>
+          </div>
+          <div class="modal-actions">
+            <button class="ghost" id="cancelModal" type="button">Cancelar</button>
+            <button class="primary" id="saveUserBtn" type="submit">Confirmar datos</button>
+          </div>
+          <div class="confirm-card" id="confirmCard"></div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const ACCESS_API_URL = "https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec";
+    const $ = id => document.getElementById(id);
+    let users = [];
+    let confirmReady = false;
+
+    function norm(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim()}
+    function escapeHtml(value){return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
+    function statusClass(value){const n=norm(value);if(n==="VACACIONES")return"vacaciones";if(n==="RETIRADO")return"retirado";return"activo"}
+    async function api(action,payload={}){
+      const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},cache:"no-store",body:JSON.stringify({action,payload})});
+      const text=await response.text();
+      return JSON.parse(String(text||"{}"));
+    }
+    function setMessage(text,type=""){ $("message").textContent=text; $("message").style.color=type==="error"?"#b42318":"#6d8497"; }
+    async function loadUsers(){
+      const data=await api("getUsers");
+      if(!data.success) throw new Error(data.message||"No se pudo cargar usuarios");
+      users=data.users||[];
+      syncRoleOptions();
+      syncUserSuggestions();
+      renderUsers();
+    }
+    function uniqueSorted(values){
+      return [...new Set(values.map(value=>String(value||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+    }
+    function syncRoleOptions(){
+      const selected=$("roleFilter").value;
+      const modalSelected=$("rolSelect") ? $("rolSelect").value : "";
+      const roles=uniqueSorted(users.map(user=>user.rol));
+      $("roleFilter").innerHTML=`<option value="">Todos los roles</option>`+roles.map(role=>`<option value="${escapeHtml(role)}">${escapeHtml(role)}</option>`).join("");
+      if(roles.includes(selected)) $("roleFilter").value=selected;
+      if($("rolSelect")){
+        $("rolSelect").innerHTML=`<option value="">Seleccione un rol</option>`+roles.map(role=>`<option value="${escapeHtml(role)}">${escapeHtml(role)}</option>`).join("")+`<option value="__new__">+ Nuevo rol</option>`;
+        if(roles.includes(modalSelected)) $("rolSelect").value=modalSelected;
+      }
+    }
+    function syncUserSuggestions(){
+      const options=uniqueSorted(users.flatMap(user=>[user.usuario,user.razon].filter(Boolean)));
+      $("userSuggestions").innerHTML=options.map(value=>`<option value="${escapeHtml(value)}"></option>`).join("");
+    }
+    function updateKpis(){
+      $("kpiTotal").textContent=users.length;
+      $("kpiActive").textContent=users.filter(user=>statusClass(user.estado)==="activo").length;
+      $("kpiVacation").textContent=users.filter(user=>statusClass(user.estado)==="vacaciones").length;
+      $("kpiRetired").textContent=users.filter(user=>statusClass(user.estado)==="retirado").length;
+    }
+    function setRoleValue(role){
+      const roles=uniqueSorted(users.map(user=>user.rol));
+      if(role && !roles.includes(role)){
+        $("rolSelect").value="__new__";
+        $("rol").value=role;
+      }else{
+        $("rolSelect").value=role||"";
+        $("rol").value="";
+      }
+      syncRoleEntry();
+    }
+    function syncRoleEntry(){
+      const isNew=$("rolSelect").value==="__new__";
+      $("roleEntry").classList.toggle("is-new",isNew);
+      $("rol").required=isNew;
+    }
+    function selectedRole(){
+      return $("rolSelect").value==="__new__" ? $("rol").value.trim() : $("rolSelect").value.trim();
+    }
+    function resetConfirmation(){
+      confirmReady=false;
+      updateConfirmState(false);
+      $("saveUserBtn").textContent="Confirmar datos";
+    }
+    function updateConfirmState(show){
+      const card=$("confirmCard");
+      if(!card)return;
+      card.classList.toggle("is-visible",!!show);
+      if(!show) card.innerHTML="";
+    }
+    function collectPayload(){
+      return {row:$("row").value,rol:selectedRole(),razon:$("razon").value,usuario:$("usuario").value,estado:$("estado").value,password:$("password").value};
+    }
+    function validatePayload(payload){
+      if(!payload.rol) return "Seleccione un rol o ingrese un nuevo rol.";
+      if(!payload.usuario) return "Ingrese el usuario.";
+      if(!payload.razon) return "Ingrese el nombre o razón.";
+      if(!payload.row && !payload.password) return "Ingrese una contraseña para el nuevo usuario.";
+      return "";
+    }
+    function showConfirmation(payload){
+      $("confirmCard").innerHTML=`<strong>Confirme que los datos son correctos</strong><div class="confirm-grid"><div><span>Rol</span><b>${escapeHtml(payload.rol)}</b></div><div><span>Usuario</span><b>${escapeHtml(payload.usuario)}</b></div><div><span>Nombre / Razón</span><b>${escapeHtml(payload.razon)}</b></div><div><span>Estado</span><b>${escapeHtml(payload.estado)}</b></div></div>`;
+      updateConfirmState(true);
+    }
+    function filteredUsers(){
+      const role=norm($("roleFilter").value);
+      const q=norm($("search").value);
+      const status=norm($("statusFilter").value);
+      return users.filter(user=>(!role||norm(user.rol)===role)&&(!q||norm(`${user.usuario} ${user.razon}`).includes(q))&&(!status||norm(user.estado)===status));
+    }
+    function renderUsers(){
+      const list=filteredUsers();
+      updateKpis();
+      $("usersBody").innerHTML=list.length?list.map(user=>`<tr>
+        <td>${escapeHtml(user.rol)}</td>
+        <td class="user">${escapeHtml(user.usuario)}</td>
+        <td>${escapeHtml(user.razon)}</td>
+        <td><span class="pill ${statusClass(user.estado)}">${escapeHtml(user.estado||"Activo")}</span></td>
+        <td><div class="actions"><button class="ghost" type="button" data-edit="${escapeHtml(user.row)}">Editar</button><button class="danger" type="button" data-delete="${escapeHtml(user.row)}">Retirar</button></div></td>
+      </tr>`).join(""):`<tr><td colspan="5" style="padding:34px;text-align:center;color:#6d8497">No hay usuarios para los filtros seleccionados.</td></tr>`;
+      $("tableStatus").textContent=`${list.length} de ${users.length} usuario(s)`;
+      document.querySelectorAll("[data-edit]").forEach(btn=>btn.addEventListener("click",()=>editUser(btn.dataset.edit)));
+      document.querySelectorAll("[data-delete]").forEach(btn=>btn.addEventListener("click",()=>retireUser(btn.dataset.delete)));
+    }
+    function openModal(title){
+      confirmReady=false;
+      updateConfirmState(false);
+      $("saveUserBtn").textContent="Confirmar datos";
+      $("modalTitle").textContent=title||"Añadir usuario";
+      $("userModal").hidden=false;
+      setTimeout(()=>$("rolSelect").focus(),40);
+    }
+    function closeModal(){
+      $("userModal").hidden=true;
+    }
+    function editUser(row){
+      const user=users.find(item=>String(item.row)===String(row));
+      if(!user)return;
+      $("row").value=user.row||"";
+      setRoleValue(user.rol||"");
+      $("razon").value=user.razon||"";
+      $("usuario").value=user.usuario||"";
+      $("estado").value=user.estado||"Activo";
+      $("password").value="";
+      openModal("Editar usuario");
+      setMessage("Editando usuario seleccionado.");
+    }
+    function clearForm(){
+      $("userForm").reset();
+      $("row").value="";
+      $("estado").value="Activo";
+      setRoleValue("");
+      setMessage("");
+      openModal("Añadir usuario");
+    }
+    async function retireUser(row){
+      if(!confirm("¿Retirar este usuario?")) return;
+      const data=await api("deleteUser",{row});
+      setMessage(data.message||"",data.success?"":"error");
+      await loadUsers();
+    }
+    $("filterForm").addEventListener("submit",event=>{event.preventDefault();renderUsers()});
+    $("clearFilters").addEventListener("click",()=>{$("roleFilter").value="";$("search").value="";$("statusFilter").value="";renderUsers();});
+    $("roleFilter").addEventListener("change",renderUsers);
+    $("statusFilter").addEventListener("change",renderUsers);
+    $("search").addEventListener("input",renderUsers);
+    $("addUserCard").addEventListener("click",clearForm);
+    $("rolSelect").addEventListener("change",()=>{syncRoleEntry();resetConfirmation();});
+    ["rol","razon","usuario","estado","password"].forEach(id=>$(id).addEventListener("input",resetConfirmation));
+    $("closeModal").addEventListener("click",closeModal);
+    $("cancelModal").addEventListener("click",closeModal);
+    $("userModal").addEventListener("click",event=>{if(event.target===$("userModal")) closeModal()});
+    document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!$("userModal").hidden) closeModal()});
+    $("userForm").addEventListener("submit",async(event)=>{
+      event.preventDefault();
+      const payload=collectPayload();
+      const validation=validatePayload(payload);
+      if(validation){setMessage(validation,"error");return;}
+      if(!confirmReady){
+        showConfirmation(payload);
+        confirmReady=true;
+        $("saveUserBtn").textContent="Guardar usuario";
+        setMessage("Revise los datos y presione Guardar usuario para confirmar.");
+        return;
+      }
+      const data=await api("saveUser",payload);
+      setMessage(data.message||"",data.success?"":"error");
+      if(data.success){closeModal();$("userForm").reset();confirmReady=false;await loadUsers();}
+    });
+    loadUsers().catch(error=>setMessage(error.message,"error"));
+  </script>
+</body>
+</html>
+

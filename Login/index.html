@@ -1719,11 +1719,12 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.3.1';
+    const APP_VERSION = '1.4.0';
     const APP_RELEASE = 'OPAUSTRO v1.3.1';
     const APP_RELEASE_KEY = '1.3.1';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
+    let heartbeatTimer = null;
     let icePreparationPromise = null;
 
     function readStored(key) {
@@ -1900,15 +1901,37 @@
 
     const MODULE_DEFINITIONS = {
       Admin: {
-        label: "Admin",
-        icon: "../Recuros_imagenes/inventario.png",
-        path: "../Admin/index.html"
+        label: "Control de accesos",
+        icon: "../Recuros_imagenes/usuario.png",
+        path: "../Admin/informe_accesos.html?embed=1",
+        embed: true
       },
       ControlAccesoApp: {
-        label: "Control de acceso",
-        symbol: "access",
+        label: "Informe de accesos",
+        symbol: "report",
+        icon: "../Recuros_imagenes/reporte.png",
+        path: "../Admin/informe_accesos.html?embed=1",
+        embed: true
+      },
+      ControlAccesoInforme: {
+        label: "Informe de accesos",
+        symbol: "report",
+        icon: "../Recuros_imagenes/reporte.png",
+        path: "../Admin/informe_accesos.html?embed=1",
+        embed: true
+      },
+      ControlAccesoAdmin: {
+        label: "Administrar accesos",
+        symbol: "controls",
+        icon: "../Recuros_imagenes/rol.png",
+        path: "../Admin/administrar_accesos.html?embed=1",
+        embed: true
+      },
+      ControlUsuarios: {
+        label: "Control de usuarios",
+        symbol: "users",
         icon: "../Recuros_imagenes/usuario.png",
-        path: "../Admin/control_acceso_app.html?embed=1",
+        path: "../Admin/control_usuarios.html?embed=1",
         embed: true
       },
       Ventas: {
@@ -2047,9 +2070,11 @@
     const ICE_ADMIN_MODULES = ["IceResumen", "IceInventario", "IceReportes"];
     const ICE_OPERATIVO_MODULES = ["IceEscaneo", "IceMisVisitas"];
     const GERENCIA_MODULES = ["GerenciaTablero", "GerenciaRevision", "GerenciaFlujo"];
-    const ADMIN_APP_MODULES = ["ControlAccesoApp"];
-    const GERENCIA_ACCESS_MODULES = [...ADMIN_VENTAS_MODULES, ...LOGISTICA_MODULES, ...GERENCIA_MODULES, ...ICE_ADMIN_MODULES];
-    const ADMIN_GERENCIA_MODULES = [...ADMIN_APP_MODULES, ...GERENCIA_ACCESS_MODULES];
+    const ACCESS_CONTROL_MODULES = ["ControlAccesoInforme", "ControlAccesoAdmin", "ControlUsuarios"];
+    const GERENCIA_CONTROL_MODULES = ["ControlAccesoInforme"];
+    const ADMIN_APP_MODULES = [...ACCESS_CONTROL_MODULES];
+    const GERENCIA_ACCESS_MODULES = [...ADMIN_VENTAS_MODULES, ...LOGISTICA_MODULES, ...GERENCIA_MODULES, ...ICE_ADMIN_MODULES, ...GERENCIA_CONTROL_MODULES];
+    const ADMIN_GERENCIA_MODULES = [...ADMIN_VENTAS_MODULES, ...LOGISTICA_MODULES, ...GERENCIA_MODULES, ...ICE_ADMIN_MODULES, ...ACCESS_CONTROL_MODULES];
 
     const SYMBOLS = {
       map: "&#128506;&#65039;",
@@ -2062,16 +2087,19 @@
       cost: "&#128176;",
       cash: "&#128181;",
       access: "&#128272;",
+      report: "&#128202;",
+      controls: "&#9881;&#65039;",
+      users: "&#128101;",
       seller: "&#128100;"
     };
 
     const AREA_GROUPS = [
       {
-        id: "Admin",
-        label: "Admin",
-        icon: "&#128272;",
+        id: "ControlAccesos",
+        label: "Control de accesos",
+        icon: "&#128101;",
         iconPath: "../Recuros_imagenes/usuario.png",
-        modules: ["ControlAccesoApp"]
+        modules: ["ControlAccesoInforme", "ControlAccesoAdmin", "ControlUsuarios"]
       },
       {
         id: "Ventas",
@@ -2240,8 +2268,9 @@
         const user = String((session && (session.user || session.usuario || session.nombre)) || (credentials && credentials.user) || "").trim();
         const role = String((session && (session.role || session.rol)) || (credentials && credentials.role) || "").trim();
         if (!user || !role) return;
+        if (session && !session.sessionId) session.sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
         const entry = {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          id: session && session.sessionId ? session.sessionId : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           user,
           role,
           at: new Date().toISOString(),
@@ -2254,6 +2283,53 @@
         queueAccessLog(entry);
         flushAccessLogQueue();
       } catch (error) {}
+    }
+
+    async function postSessionAction(action, payload) {
+      if (!LOGIN_API_URL || !payload) return false;
+      try {
+        const response = await fetch(LOGIN_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          cache: "no-store",
+          body: JSON.stringify({ action, payload }),
+          keepalive: true
+        });
+        return response.ok;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function sessionHeartbeatPayload(session) {
+      if (!session) return null;
+      if (!session.sessionId) session.sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      return {
+        sessionId: session.sessionId,
+        user: session.user || session.usuario || session.nombre || "",
+        role: session.role || session.rol || "",
+        startedAt: session.startedAt || new Date().toISOString(),
+        version: APP_VERSION,
+        device: isInstalledApp() ? "app_instalada" : "web",
+        userAgent: navigator.userAgent || ""
+      };
+    }
+
+    function startSessionHeartbeat(session) {
+      stopSessionHeartbeat(false);
+      if (!session) return;
+      if (!session.startedAt) session.startedAt = new Date().toISOString();
+      const send = () => postSessionAction("recordSessionHeartbeat", sessionHeartbeatPayload(session));
+      send();
+      heartbeatTimer = setInterval(send, 30000);
+    }
+
+    function stopSessionHeartbeat(notifyEnd) {
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+      if (notifyEnd && state.currentSession && state.currentSession.sessionId) {
+        postSessionAction("endSession", { sessionId: state.currentSession.sessionId });
+      }
     }
 
     function queueAccessLog(entry) {
@@ -2678,7 +2754,10 @@
 
     function renderApp(session) {
       state.currentSession = session;
+      if (!state.currentSession.sessionId) state.currentSession.sessionId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      if (!state.currentSession.startedAt) state.currentSession.startedAt = new Date().toISOString();
       persistSession(session);
+      startSessionHeartbeat(state.currentSession);
       $("#loginScreen").classList.add("is-hidden");
       $("#appScreen").classList.remove("is-hidden");
       applyResponsiveMode();
@@ -2790,6 +2869,7 @@
     });
 
     function logout(expired) {
+      stopSessionHeartbeat(true);
       state.currentSession = null;
       clearTimeout(inactivityTimer);
       removeStored(SESSION_KEY);
@@ -2850,6 +2930,11 @@
     });
     window.addEventListener("online", flushAccessLogQueue);
     window.addEventListener("focus", flushAccessLogQueue);
+    window.addEventListener("beforeunload", () => {
+      if (state.currentSession && state.currentSession.sessionId) {
+        postSessionAction("endSession", { sessionId: state.currentSession.sessionId });
+      }
+    });
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -2888,6 +2973,7 @@
   </script>
 </body>
 </html>
+
 
 
 

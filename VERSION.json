@@ -1,16 +1,15 @@
 ﻿{
   "app": "OPAUSTRO",
-  "version": "1.3.1",
-  "label": "OPAUSTRO v1.3.1",
+  "version": "1.4.0",
+  "label": "OPAUSTRO v1.4.0",
   "channel": "prueba",
   "publishedAt": "2026-07-07",
   "notes": [
-    "Hotfix: Control de acceso consulta historial central de Apps Script en todos los dispositivos.",
-    "Hotfix: Control de acceso refresca automaticamente y no se limita al almacenamiento local del navegador.",
-    "Hotfix: Login reintenta enviar accesos pendientes para evitar perdida de registros por red o cierre de app.",
-    "Hotfix: El historial de accesos permite registrar todos los roles."
+    "Nueva version: Informe de accesos lista todos los roles existentes y permite desplegar usuarios conectados.",
+    "Nueva version: Control de usuarios agrega limpieza de filtros, seleccion de roles existentes y confirmacion previa al guardado.",
+    "Nueva version: Gerencia accede solo al informe de accesos; Administrador conserva el control completo."
   ],
-  "releaseKey": "1.3.1",
+  "releaseKey": "1.4.0",
   "forceUpdate": false,
   "rollback": false
 }

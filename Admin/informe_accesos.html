@@ -1,0 +1,304 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob: https://script.google.com https://script.googleusercontent.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';">
+  <title>Control de acceso</title>
+  <style>
+    :root{--bg:#eef4f8;--panel:#fff;--line:#d8e5ee;--text:#062b49;--muted:#61758a;--brand:#076897;--brand2:#0b7db2;--ok:#0b8f61;--soft:#f7fbfe;--shadow:0 18px 40px rgba(6,43,73,.08)}
+    *{box-sizing:border-box}
+    html,body{min-height:100%;margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
+    body{padding:28px;background:linear-gradient(180deg,#f7fbfe 0,#eef4f8 220px,#eef4f8 100%)}
+    .wrap{max-width:1180px;margin:0 auto}
+    .head{display:none}
+    h1{margin:0;font-size:28px;line-height:1.1;letter-spacing:-.02em}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    button{border:0;border-radius:10px;padding:12px 18px;font-weight:800;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+    button:hover{transform:translateY(-1px)}
+    .primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 10px 24px rgba(7,104,151,.18)}
+    .ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+    .metric{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+    .metric::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--brand2),#28c6a2)}
+    .metric span{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+    .metric strong{display:block;margin-top:10px;font-size:32px;letter-spacing:-.03em}
+    .filters{display:grid;grid-template-columns:1fr 220px 180px auto 58px;gap:12px;align-items:end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 10px 28px rgba(6,43,73,.05)}
+    .sync-action{display:grid;justify-items:center;gap:4px;align-self:end}
+    .sync-action button{width:44px;height:44px;display:grid;place-items:center;padding:0;border-radius:12px;background:#fff;color:var(--brand);border:1px solid #c7d8e4;box-shadow:0 8px 20px rgba(6,43,73,.07);font-size:18px}
+    .sync-action small{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+    .role-control{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px;box-shadow:0 10px 28px rgba(6,43,73,.05)}
+    .role-control-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .role-control-title{font-weight:900;color:var(--text)}
+    .role-control-note{font-size:12px;color:var(--muted);font-weight:700}
+    .role-chips{display:flex;flex-wrap:wrap;gap:8px}
+    .role-chip{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:7px 11px;border:1px solid #c7d8e4;border-radius:999px;background:#f8fcff;color:#36546a;font-size:13px;font-weight:800;text-transform:none;letter-spacing:0;cursor:pointer;user-select:none}
+    .role-chip input{width:15px;height:15px;margin:0;accent-color:var(--brand)}
+    .role-chip:has(input:checked){border-color:#9ed4ec;background:#e7f5fb;color:#075f9b}
+    label{display:grid;gap:6px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+    input,select{width:100%;border:1px solid #c7d8e4;border-radius:10px;padding:12px 13px;font-size:15px;color:var(--text);background:#fff;outline:none}
+    input:focus,select:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(11,125,178,.12)}
+    .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:18px}
+    .panel-title{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:15px 16px;border-bottom:1px solid var(--line);font-weight:900;background:linear-gradient(180deg,#fff,var(--soft))}
+    .status{font-size:13px;color:var(--muted);font-weight:700}
+    .status.is-live{color:var(--ok)}
+    .status.is-local{color:#b45309}.online-toggle{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;padding:0;cursor:pointer}.online-toggle:hover{transform:none;text-decoration:underline}.online-arrow{display:inline-block;transition:transform .18s ease}.online-toggle[aria-expanded="true"] .online-arrow{transform:rotate(90deg)}.online-list{display:none;margin-top:-8px;margin-bottom:18px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgba(6,43,73,.05);overflow:hidden}.online-list.is-open{display:block}.online-list-head{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:900;background:linear-gradient(180deg,#fff,var(--soft))}.online-users{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;padding:12px}.online-user{border:1px solid #dce8f0;border-radius:12px;padding:11px;background:#f9fdff}.online-user strong{display:block;color:var(--text)}.online-user span{display:block;margin-top:3px;color:var(--muted);font-size:12px;font-weight:800}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:760px}
+    th,td{padding:13px 14px;border-bottom:1px solid #e5edf3;text-align:left;vertical-align:top}
+    th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#506b80;background:var(--soft)}
+    tbody tr:hover{background:#f8fcff}
+    td{font-size:14px}
+    .user{font-weight:900;color:#05365a}.role{display:inline-flex;border-radius:999px;background:#e7f3fa;color:#075f9b;padding:4px 9px;font-size:12px;font-weight:900}
+    .empty{padding:34px;text-align:center;color:var(--muted)}
+    html.embed-mode body{padding:22px}
+    @media(max-width:760px){body{padding:16px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr}.sync-action{justify-items:start}.metric strong{font-size:26px}.role-control-head{display:block}.role-control-note{margin-top:6px}}
+  </style>
+  <script>
+    if(new URLSearchParams(location.search).get("embed")==="1") document.documentElement.classList.add("embed-mode");
+  </script>
+</head>
+<body>
+  <main class="wrap">
+    <form class="filters" id="filterForm">
+      <label>Usuario
+        <input id="userFilter" placeholder="Buscar por usuario">
+      </label>
+      <label>Rol
+        <select id="roleFilter"><option value="">Todos los roles</option></select>
+      </label>
+      <label>Fecha
+        <input id="dateFilter" type="date">
+      </label>
+      <button class="primary" type="submit">Buscar</button>
+      <div class="sync-action" aria-label="Sincronizar accesos">
+        <button class="ghost" id="refreshBtn" type="button" title="Actualizar accesos" aria-label="Actualizar accesos">&#8635;</button>
+        <small>Sinc</small>
+      </div>
+    </form>
+
+    <section class="metrics" aria-label="Resumen de accesos">
+      <article class="metric"><span>Ingresos hoy</span><strong id="countDay">0</strong></article>
+      <article class="metric"><span>Semana actual</span><strong id="countWeek">0</strong></article>
+      <article class="metric"><span>Mes actual</span><strong id="countMonth">0</strong></article>
+      <article class="metric"><span>Usuarios &uacute;nicos</span><strong id="countUsers">0</strong></article>
+    </section>
+
+    <section class="online-list" id="onlineList" aria-label="Usuarios conectados"><div class="online-list-head">Usuarios conectados ahora</div><div class="online-users" id="onlineUsers"><div class="empty">Sin usuarios conectados.</div></div></section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <span>Accesos por usuario</span>
+        <span class="status" id="tableStatus">0 registros</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Hoy</th>
+              <th>Semana</th>
+              <th>Mes</th>
+              <th>Total</th>
+              <th>&Uacute;ltimo ingreso</th>
+            </tr>
+          </thead>
+          <tbody id="accessBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <span>Historial de ingresos</span>
+        <span class="status" id="historyStatus">0 accesos</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rol</th>
+              <th>Usuario</th>
+              <th>Fecha y hora</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const ACCESS_API_URL = "https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec";
+    const LOG_KEY = "opaustro_access_log";
+    const ROLE_EXCLUDED_KEY = "opaustro_access_roles_excluded";
+    const DEFAULT_EXCLUDED_ROLE_KEYS = new Set(["ADMIN", "ADMINISTRADOR", "GERENCIA", "GERENTE"]);
+    const $ = id => document.getElementById(id);
+    let rows = [];
+    let loginRoles = [];
+    let lastConnectedUsers = [];
+    let onlineListOpen = false;
+    let allRoles = [];
+    let excludedRoleKeys = new Set();
+    let sourceLabel = "local";
+    let refreshTimer = null;
+
+    function parseDate(value){const d=new Date(value);return Number.isNaN(d.getTime())?null:d}
+    function startOfDay(date){return new Date(date.getFullYear(),date.getMonth(),date.getDate())}
+    function startOfWeek(date){const d=startOfDay(date);const day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d}
+    function startOfMonth(date){return new Date(date.getFullYear(),date.getMonth(),1)}
+    function fmt(value){const d=parseDate(value);return d?d.toLocaleString("es-EC",{dateStyle:"short",timeStyle:"short"}):""}
+    function norm(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim()}
+    function roleKey(value){return norm(value)}
+    function readExcludedRoles(){try{const raw=JSON.parse(localStorage.getItem(ROLE_EXCLUDED_KEY)||"null");return Array.isArray(raw)?new Set(raw.map(roleKey)):new Set(DEFAULT_EXCLUDED_ROLE_KEYS)}catch(_){return new Set(DEFAULT_EXCLUDED_ROLE_KEYS)}}
+    function writeExcludedRoles(){try{localStorage.setItem(ROLE_EXCLUDED_KEY,JSON.stringify([...excludedRoleKeys]))}catch(_){}}
+    function localRows(){try{return JSON.parse(localStorage.getItem(LOG_KEY)||"[]").filter(r=>r&&r.user&&r.role&&r.at)}catch(_){return []}}
+    async function fetchLoginRoles(){
+      if(!ACCESS_API_URL) return [];
+      const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},cache:"no-store",body:JSON.stringify({action:"getLoginData",payload:{}})});
+      const text=await response.text();
+      const data=JSON.parse(String(text||"{}"));
+      if(!data.success||!data.usersByRole) return [];
+      return Object.keys(data.usersByRole).filter(Boolean);
+    }
+    async function fetchCentralRows(){
+      if(!ACCESS_API_URL) throw new Error("Sin API");
+      const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"getAccessLogs",payload:{limit:5000}})});
+      const text=await response.text();
+      const data=JSON.parse(String(text||"{}"));
+      if(!data.success||!Array.isArray(data.logs)) throw new Error(data.message||"Sin historial central");
+      return data.logs.filter(r=>r&&r.user&&r.role&&r.at);
+    }
+    async function fetchConnectedUsers(){
+      if(!ACCESS_API_URL) return {connected:0,total:0};
+      const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},cache:"no-store",body:JSON.stringify({action:"getConnectedUsers",payload:{thresholdSeconds:90}})});
+      const text=await response.text();
+      const data=JSON.parse(String(text||"{}"));
+      if(!data.success) return {connected:0,total:0,sessions:[]};
+      return {connected:Number(data.connected||0),total:Number(data.total||0),sessions:Array.isArray(data.sessions)?data.sessions:[]};
+    }
+    function mergeRows(primary, secondary){
+      const seen=new Set();
+      return primary.concat(secondary).filter(row=>{
+        const key=String(row.id||`${row.user}|${row.role}|${row.at}`);
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    async function loadRows(){
+      try{
+        const result=await Promise.allSettled([fetchCentralRows(),fetchLoginRoles()]);
+        const centralOk=result[0].status==="fulfilled";
+        const central=centralOk?result[0].value:[];
+        loginRoles=result[1].status==="fulfilled"?result[1].value:loginRoles;
+        rows=mergeRows(central,localRows());
+        sourceLabel=centralOk?"central":"local";
+      }catch(_){
+        rows=localRows();
+        sourceLabel="local";
+      }
+    }
+    function uniqueRoles(){const byKey=new Map();loginRoles.concat(rows.map(r=>String(r.role).trim())).filter(Boolean).forEach(role=>{const key=roleKey(role);if(key&&!byKey.has(key))byKey.set(key,role)});return [...byKey.values()].sort((a,b)=>a.localeCompare(b,"es"))}
+    function controlledRoles(){return allRoles.filter(role=>!excludedRoleKeys.has(roleKey(role)))}
+    function renderControlledRoles(){
+      const box=$("controlledRoles");
+      const status=$("controlledRolesStatus");
+      if(!box||!status) return;
+      allRoles=uniqueRoles();
+      if(!excludedRoleKeys.size&&!localStorage.getItem(ROLE_EXCLUDED_KEY)) excludedRoleKeys=readExcludedRoles();
+      box.innerHTML=allRoles.length?allRoles.map(role=>{
+        const key=roleKey(role);
+        const checked=!excludedRoleKeys.has(key);
+        return `<label class="role-chip"><input type="checkbox" value="${escapeHtml(key)}" ${checked?"checked":""}><span>${escapeHtml(role)}</span></label>`;
+      }).join(""):`<span class="role-control-note">No se encontraron roles configurados.</span>`;
+      status.textContent=`${controlledRoles().length} de ${allRoles.length} rol(es) activos`;
+      box.querySelectorAll("input[type='checkbox']").forEach(input=>{
+        input.addEventListener("change",()=>{
+          if(input.checked) excludedRoleKeys.delete(input.value);
+          else excludedRoleKeys.add(input.value);
+          writeExcludedRoles();
+          renderControlledRoles();
+          syncRoleOptions();
+          render();
+        });
+      });
+    }
+    function syncRoleOptions(){const current=$("roleFilter").value;const roles=allRoles.length?allRoles:uniqueRoles();$("roleFilter").innerHTML='<option value="">Todos los roles existentes</option>'+roles.map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join("");$("roleFilter").value=roles.some(r=>norm(r)===norm(current))?current:""}
+    function escapeHtml(value){return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
+    function inRange(row,start){const d=parseDate(row.at);return d&&d>=start}
+    function dateKey(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`}
+    function sameDate(row,selected){const d=parseDate(row.at);return d&&selected&&dateKey(d)===selected}
+    function filteredRows(){
+      const q=norm($("userFilter").value);
+      const role=norm($("roleFilter").value);
+      const date=$("dateFilter").value;
+      const controlled=new Set(controlledRoles().map(roleKey));
+      return rows.filter(row=>(role?norm(row.role)===role:controlled.has(roleKey(row.role)))&&(!q||norm(row.user).includes(q))&&(!date||sameDate(row,date)));
+    }
+    async function render(){
+      await loadRows();
+      if(!excludedRoleKeys.size&&!localStorage.getItem(ROLE_EXCLUDED_KEY)) excludedRoleKeys=readExcludedRoles();
+      renderControlledRoles();
+      syncRoleOptions();
+      const now=new Date(), day=startOfDay(now), week=startOfWeek(now), month=startOfMonth(now);
+      const view=filteredRows();
+      $("countDay").textContent=view.filter(r=>inRange(r,day)).length;
+      $("countWeek").textContent=view.filter(r=>inRange(r,week)).length;
+      $("countMonth").textContent=view.filter(r=>inRange(r,month)).length;
+      $("countUsers").textContent=new Set(view.map(r=>norm(r.user))).size;
+
+      const grouped=new Map();
+      view.forEach(row=>{
+        const key=`${norm(row.user)}|${norm(row.role)}`;
+        if(!grouped.has(key)) grouped.set(key,{user:row.user,role:row.role,day:0,week:0,month:0,total:0,last:""});
+        const item=grouped.get(key);
+        item.total++;
+        if(inRange(row,day)) item.day++;
+        if(inRange(row,week)) item.week++;
+        if(inRange(row,month)) item.month++;
+        if(!item.last||parseDate(row.at)>parseDate(item.last)) item.last=row.at;
+      });
+      const list=[...grouped.values()].sort((a,b)=>parseDate(b.last)-parseDate(a.last));
+      $("accessBody").innerHTML=list.length?list.map(item=>`<tr><td class="user">${escapeHtml(item.user)}</td><td><span class="role">${escapeHtml(item.role)}</span></td><td>${item.day}</td><td>${item.week}</td><td>${item.month}</td><td>${item.total}</td><td>${escapeHtml(fmt(item.last))}</td></tr>`).join(""):`<tr><td class="empty" colspan="7">No hay accesos registrados para los roles y filtros seleccionados.</td></tr>`;
+      const tableStatus=$("tableStatus");
+      tableStatus.textContent=`${list.length} usuario(s) / ${view.length} acceso(s) - ${sourceLabel==="central"?"historial central en vivo":"historial local"}`;
+      tableStatus.className=`status ${sourceLabel==="central"?"is-live":"is-local"}`;
+
+      const history=view.slice().sort((a,b)=>parseDate(b.at)-parseDate(a.at));
+      $("historyBody").innerHTML=history.length?history.map(row=>`<tr><td><span class="role">${escapeHtml(row.role)}</span></td><td class="user">${escapeHtml(row.user)}</td><td>${escapeHtml(fmt(row.at))}</td></tr>`).join(""):`<tr><td class="empty" colspan="3">No hay historial para los filtros seleccionados.</td></tr>`;
+      $("historyStatus").textContent=`${history.length} acceso(s)`;
+      fetchConnectedUsers().then((online)=>{
+        lastConnectedUsers=Array.isArray(online.sessions)?online.sessions:[];
+        tableStatus.innerHTML=`<button class="online-toggle" id="onlineToggle" type="button" aria-expanded="${onlineListOpen?"true":"false"}">${online.connected} usuario(s) conectado(s) de ${online.total}<span class="online-arrow">›</span></button>`;
+        tableStatus.className="status is-live";
+        const toggle=$("onlineToggle");
+        if(toggle) toggle.addEventListener("click",()=>{onlineListOpen=!onlineListOpen;renderOnlineUsers();});
+        renderOnlineUsers();
+      }).catch(()=>{});
+    }
+    function renderOnlineUsers(){
+      const panel=$("onlineList");
+      const box=$("onlineUsers");
+      if(!panel||!box) return;
+      panel.classList.toggle("is-open", onlineListOpen);
+      box.innerHTML=lastConnectedUsers.length?lastConnectedUsers.map(item=>`<div class="online-user"><strong>${escapeHtml(item.user)}</strong><span>${escapeHtml(item.role)} · ${escapeHtml(fmt(item.lastHeartbeat))}</span></div>`).join(""):`<div class="empty">No hay usuarios conectados en este momento.</div>`;
+    }
+    $("filterForm").addEventListener("submit",e=>{e.preventDefault();render()});
+    $("roleFilter").addEventListener("change",render);
+    $("dateFilter").addEventListener("change",render);
+    $("refreshBtn").addEventListener("click",render);
+    window.addEventListener("storage",event=>{if(event.key===LOG_KEY)render()});
+    window.addEventListener("focus",render);
+    refreshTimer=setInterval(render,30000);
+    render();
+  </script>
+</body>
+</html>
+
+
+
+
+
