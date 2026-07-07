@@ -5,6 +5,7 @@
 - Corregido (critico): `releaseKeyOf` truncaba la version a "mayor.menor", por lo que 1.4.0, 1.4.1, 1.4.2 y 1.4.3 se veian todas identicas ("1.4") para el comparador y el aviso de actualizacion nunca se disparaba. Ahora compara la version completa.
 - Agregado pie de pagina en la pantalla de login, fuera del recuadro blanco, con el nombre de la app y la version instalada.
 - Hotfix: la instalacion de la actualizacion (barra de progreso) podia quedarse colgada indefinidamente si una descarga de red no respondia. Se agrego un tope de tiempo por paso y un limite absoluto de 12 segundos: la actualizacion siempre termina y recarga la app o la web automaticamente.
+- Hotfix: `forceUpdate:true` volvia a mostrar el aviso de actualizacion en bucle infinito aunque ya se estuviera en la ultima version. Ahora el aviso solo aparece cuando realmente hay una version distinta a la instalada; `forceUpdate`/`rollback` solo deciden si esa actualizacion pendiente se instala sola o pide confirmacion. Se desactivo `forceUpdate` en este release.
 
 ## OPAUSTRO v1.4.3 - 2026-07-07
 

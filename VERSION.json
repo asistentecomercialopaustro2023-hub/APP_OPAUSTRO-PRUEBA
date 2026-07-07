@@ -9,6 +9,6 @@
     "Nueva version: pie de pagina en el login con el nombre y la version actual de la app."
   ],
   "releaseKey": "1.4.4",
-  "forceUpdate": true,
+  "forceUpdate": false,
   "rollback": false
 }

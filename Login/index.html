@@ -1999,8 +1999,9 @@
         const releaseKey = releaseKeyOf(release, current);
         const stored = readStored(RELEASE_KEY);
         const forced = release && (release.forceUpdate === true || release.rollback === true);
-        if (stored && (stored !== releaseKey || forced) && !document.querySelector(".update-overlay")) {
-          showUpdatePrompt(release, current, releaseKey, !isInstalledApp());
+        const needsUpdate = stored && stored !== releaseKey;
+        if (needsUpdate && !document.querySelector(".update-overlay")) {
+          showUpdatePrompt(release, current, releaseKey, !isInstalledApp() || forced);
           return;
         }
         writeStored(RELEASE_KEY, releaseKey);
