@@ -1901,6 +1901,13 @@
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    function withTimeout(promise, ms) {
+      return Promise.race([
+        Promise.resolve(promise).catch(() => {}),
+        wait(ms)
+      ]);
+    }
+
     async function warmAppShell(current, progressBar, progressLabel) {
       const assets = [
         "../VERSION.json?v=" + encodeURIComponent(current),
@@ -1919,7 +1926,7 @@
       ];
       let done = 0;
       for (const asset of assets) {
-        try { await fetch(asset, { cache: "reload" }); } catch (error) {}
+        await withTimeout(fetch(asset, { cache: "reload" }), 3000);
         done += 1;
         updateInstallProgress(progressBar, progressLabel, 55 + Math.round((done / assets.length) * 30), "Descargando actualización");
       }
@@ -1932,33 +1939,51 @@
         nowButton.textContent = "Actualizando...";
       }
       progress.hidden = false;
-      updateInstallProgress(progressBar, progressLabel, 5, "Preparando actualización");
-      await wait(250);
+
+      let finished = false;
+      const finishAndReload = () => {
+        if (finished) return;
+        finished = true;
+        updateInstallProgress(progressBar, progressLabel, 100, "Actualizado. Espere un momento");
+        writeStored(RELEASE_KEY, releaseKey || releaseKeyOf(null, current));
+        const target = location.pathname + "?v=" + encodeURIComponent(current) + "&t=" + Date.now();
+        setTimeout(() => location.replace(target), 700);
+      };
+      // Tope absoluto: pase lo que pase (red lenta, pestana en segundo plano, error inesperado),
+      // la actualizacion nunca debe quedarse colgada mas de 12 segundos.
+      const safetyTimer = setTimeout(finishAndReload, 12000);
+
       try {
+        updateInstallProgress(progressBar, progressLabel, 5, "Preparando actualización");
+        await wait(200);
         if ("serviceWorker" in navigator) {
           updateInstallProgress(progressBar, progressLabel, 20, "Revisando componentes");
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          await Promise.all(registrations.map(registration => registration.unregister()));
+          await withTimeout(
+            navigator.serviceWorker.getRegistrations().then((registrations) =>
+              Promise.all(registrations.map((registration) => registration.unregister()))
+            ),
+            2500
+          );
         }
-      } catch (error) {}
-      await wait(250);
-      try {
+        await wait(200);
         if ("caches" in window) {
           updateInstallProgress(progressBar, progressLabel, 40, "Limpiando caché anterior");
-          const keys = await caches.keys();
-          await Promise.all(keys.map(key => caches.delete(key)));
+          await withTimeout(
+            caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))),
+            2500
+          );
         }
-      } catch (error) {}
-      if (!keepSession) {
-        removeStored(SESSION_KEY);
-        removeStored(ACTIVE_MODULE_KEY);
+        if (!keepSession) {
+          removeStored(SESSION_KEY);
+          removeStored(ACTIVE_MODULE_KEY);
+        }
+        await warmAppShell(current, progressBar, progressLabel);
+      } catch (error) {
+        // Cualquier fallo aqui no debe impedir que la actualizacion termine.
+      } finally {
+        clearTimeout(safetyTimer);
+        finishAndReload();
       }
-      await warmAppShell(current, progressBar, progressLabel);
-      updateInstallProgress(progressBar, progressLabel, 100, "Actualizado. Espere un momento");
-      writeStored(RELEASE_KEY, releaseKey || releaseKeyOf(null, current));
-      await wait(1400);
-      const target = location.pathname + "?v=" + encodeURIComponent(current) + "&t=" + Date.now();
-      location.replace(target);
     }
 
     let updateCheckInFlight = false;
