@@ -1,5 +1,10 @@
 ﻿# Changelog OPAUSTRO
 
+## OPAUSTRO v1.4.4 - 2026-07-07
+
+- Corregido (critico): `releaseKeyOf` truncaba la version a "mayor.menor", por lo que 1.4.0, 1.4.1, 1.4.2 y 1.4.3 se veian todas identicas ("1.4") para el comparador y el aviso de actualizacion nunca se disparaba. Ahora compara la version completa.
+- Agregado pie de pagina en la pantalla de login, fuera del recuadro blanco, con el nombre de la app y la version instalada.
+
 ## OPAUSTRO v1.4.3 - 2026-07-07
 
 - Corregido: la deteccion de nueva version ya no se ejecuta mientras hay una sesion activa (web o app instalada); ahora espera a que el usuario cierre sesion o a que la sesion expire por inactividad antes de mostrar el aviso de actualizacion.

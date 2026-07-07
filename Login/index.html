@@ -54,7 +54,18 @@
       min-height: 100vh;
       display: grid;
       place-items: center;
+      align-content: center;
+      row-gap: 14px;
       padding: clamp(18px, 4vw, 42px);
+    }
+
+    .login-footer {
+      margin: 0;
+      color: #6b7e8c;
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+      text-align: center;
     }
 
     .login-screen.is-hidden,
@@ -1730,6 +1741,7 @@
         </form>
       </section>
     </section>
+    <p class="login-footer">&copy; OPAUSTRO-ECUADOR &middot; v<span id="loginFooterVersion"></span></p>
   </main>
 
   <section class="app-screen is-hidden" id="appScreen" aria-label="M&oacute;dulos">
@@ -1786,9 +1798,9 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.4.3';
-    const APP_RELEASE = 'OPAUSTRO v1.4.3';
-    const APP_RELEASE_KEY = '1.4.3';
+    const APP_VERSION = '1.4.4';
+    const APP_RELEASE = 'OPAUSTRO v1.4.4';
+    const APP_RELEASE_KEY = '1.4.4';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
     let heartbeatTimer = null;
@@ -1832,7 +1844,7 @@
 
     function releaseKeyOf(release, current) {
       const raw = String((release && (release.releaseKey || release.channelVersion)) || current || APP_VERSION || APP_RELEASE_KEY);
-      const match = raw.match(/\d+(?:\.\d+)?/);
+      const match = raw.match(/\d+(?:\.\d+)*/);
       return match ? match[0] : raw;
     }
 
@@ -3082,6 +3094,8 @@
       }
     });
 
+    const footerVersion = $("#loginFooterVersion");
+    if (footerVersion) footerVersion.textContent = APP_VERSION;
     loadLoginData();
     flushAccessLogQueue();
     restoreSession();

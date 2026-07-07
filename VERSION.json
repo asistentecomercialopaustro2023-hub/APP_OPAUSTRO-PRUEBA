@@ -1,15 +1,14 @@
 {
   "app": "OPAUSTRO",
-  "version": "1.4.3",
-  "label": "OPAUSTRO v1.4.3",
+  "version": "1.4.4",
+  "label": "OPAUSTRO v1.4.4",
   "channel": "prueba",
   "publishedAt": "2026-07-07",
   "notes": [
-    "Correccion: el aviso de actualizacion ya no interrumpe una sesion activa; se muestra al cerrar sesion o antes de iniciar sesion.",
-    "Nueva version: control de zoom para el contenido de los modulos (botones +/-/restablecer), independiente del encabezado, la barra lateral y el menu inferior.",
-    "Mejora: se bloqueo el zoom nativo de pagina completa para que solo el contenido pueda ampliarse."
+    "Correccion critica: el aviso de actualizacion no se mostraba porque el comparador de versiones truncaba el numero de parche (1.4.0 a 1.4.3 se veian todas como 1.4). Ahora detecta correctamente cada version.",
+    "Nueva version: pie de pagina en el login con el nombre y la version actual de la app."
   ],
-  "releaseKey": "1.4.3",
-  "forceUpdate": false,
+  "releaseKey": "1.4.4",
+  "forceUpdate": true,
   "rollback": false
 }
