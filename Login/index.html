@@ -1716,12 +1716,18 @@
   <script>
     const LOGIN_API_URL = 'https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec';
     const ICE_API_URL = 'https://script.google.com/macros/s/AKfycbztlHL2oHjPyH7BFw_awdO74ZVP_B1xHOPRxAnflXsc4d19PEAFwTb8wGPor_lmNAka0A/exec';
+    function isLocalEnv() {
+      return /^(localhost|127\.)/i.test(location.hostname);
+    }
+    function appEnv() {
+      return isLocalEnv() ? 'local' : 'prod';
+    }
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.4.1';
-    const APP_RELEASE = 'OPAUSTRO v1.4.1';
-    const APP_RELEASE_KEY = '1.4.1';
+    const APP_VERSION = '1.4.2';
+    const APP_RELEASE = 'OPAUSTRO v1.4.2';
+    const APP_RELEASE_KEY = '1.4.2';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
     let heartbeatTimer = null;
@@ -2276,7 +2282,8 @@
           at: new Date().toISOString(),
           version: APP_VERSION,
           device: isInstalledApp() ? "app_instalada" : "web",
-          userAgent: navigator.userAgent || ""
+          userAgent: navigator.userAgent || "",
+          env: appEnv()
         };
         current.push(entry);
         writeAccessEntries(key, current, 5000);

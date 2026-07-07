@@ -25,7 +25,9 @@
     .add-user-card strong{display:block;font-size:16px}
     .add-user-card span{display:block;color:var(--muted);font-size:12px;font-weight:750;margin-top:3px}
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    .kpi{background:#fff;border:1px solid #dbe8f0;border-radius:16px;padding:14px}
+    .kpi{background:#fff;border:1px solid #dbe8f0;border-radius:16px;padding:14px;text-align:left;font-family:inherit;cursor:pointer;transition:box-shadow .15s ease,border-color .15s ease}
+    .kpi:hover{box-shadow:0 12px 26px rgba(6,43,73,.1)}
+    .kpi.is-active{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(11,125,178,.16)}
     .kpi strong{display:block;font-size:24px;line-height:1;color:var(--text)}
     .kpi span{display:block;margin-top:6px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:900}
     .search-panel{padding:16px}
@@ -86,10 +88,10 @@
     </section>
 
     <section class="kpis" aria-label="Resumen de usuarios">
-      <div class="kpi"><strong id="kpiTotal">0</strong><span>Total usuarios</span></div>
-      <div class="kpi"><strong id="kpiActive">0</strong><span>Activos</span></div>
-      <div class="kpi"><strong id="kpiVacation">0</strong><span>Vacaciones</span></div>
-      <div class="kpi"><strong id="kpiRetired">0</strong><span>Retirados</span></div>
+      <button class="kpi" id="kpiCardTotal" type="button" data-status=""><strong id="kpiTotal">0</strong><span>Total usuarios</span></button>
+      <button class="kpi" id="kpiCardActive" type="button" data-status="Activo"><strong id="kpiActive">0</strong><span>Activos</span></button>
+      <button class="kpi" id="kpiCardVacation" type="button" data-status="Vacaciones"><strong id="kpiVacation">0</strong><span>Vacaciones</span></button>
+      <button class="kpi" id="kpiCardRetired" type="button" data-status="Retirado"><strong id="kpiRetired">0</strong><span>Retirados</span></button>
     </section>
 
     <section class="search-panel" aria-label="Búsqueda de usuarios">
@@ -231,6 +233,11 @@
       $("kpiActive").textContent=users.filter(user=>statusClass(user.estado)==="activo").length;
       $("kpiVacation").textContent=users.filter(user=>statusClass(user.estado)==="vacaciones").length;
       $("kpiRetired").textContent=users.filter(user=>statusClass(user.estado)==="retirado").length;
+      const activeStatus=norm($("statusFilter").value);
+      [["kpiCardTotal",""],["kpiCardActive","Activo"],["kpiCardVacation","Vacaciones"],["kpiCardRetired","Retirado"]].forEach(([id,status])=>{
+        const el=$(id);
+        if(el) el.classList.toggle("is-active", norm(status)===activeStatus);
+      });
     }
     function setRoleValue(role){
       const roles=uniqueSorted(users.map(user=>user.rol));
@@ -335,6 +342,13 @@
     }
     $("filterForm").addEventListener("submit",event=>{event.preventDefault();renderUsers()});
     $("clearFilters").addEventListener("click",()=>{$("roleFilter").value="";$("search").value="";$("statusFilter").value="";renderUsers();});
+    ["kpiCardTotal","kpiCardActive","kpiCardVacation","kpiCardRetired"].forEach(id=>{
+      $(id).addEventListener("click",()=>{
+        const status=$(id).dataset.status||"";
+        $("statusFilter").value=(norm($("statusFilter").value)===norm(status))?"":status;
+        renderUsers();
+      });
+    });
     $("roleFilter").addEventListener("change",renderUsers);
     $("statusFilter").addEventListener("change",renderUsers);
     $("search").addEventListener("input",renderUsers);

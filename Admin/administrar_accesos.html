@@ -19,7 +19,9 @@
     .eyebrow{display:block;color:var(--brand);font-size:11px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;margin-bottom:4px}
     h1{margin:0;font-size:25px;line-height:1.12;letter-spacing:0}
     .hero-copy p{margin:7px 0 0;color:var(--muted);font-size:14px;line-height:1.45}
-    .metric{border:1px solid #dbe8f0;border-radius:16px;background:#fff;padding:14px;display:grid;align-content:center;gap:4px}
+    .metric{border:1px solid #dbe8f0;border-radius:16px;background:#fff;padding:14px;display:grid;align-content:center;gap:4px;text-align:left;font-family:inherit;cursor:pointer;transition:box-shadow .15s ease,border-color .15s ease}
+    .metric:hover{box-shadow:0 12px 26px rgba(6,43,73,.1)}
+    .metric.is-active{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(11,125,178,.16)}
     .metric strong{font-size:26px;line-height:1;color:var(--text)}
     .metric span{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:900}
     .role-control{padding:18px}
@@ -61,9 +63,9 @@
           <p>Define qué roles se contabilizan en el informe central sin afectar el inicio de sesión ni la operación de los módulos.</p>
         </div>
       </div>
-      <div class="metric"><strong id="metricTotal">0</strong><span>Roles detectados</span></div>
-      <div class="metric"><strong id="metricActive">0</strong><span>En control</span></div>
-      <div class="metric"><strong id="metricPaused">0</strong><span>Excluidos</span></div>
+      <button class="metric" id="metricCardTotal" type="button" data-filter=""><strong id="metricTotal">0</strong><span>Roles detectados</span></button>
+      <button class="metric" id="metricCardActive" type="button" data-filter="active"><strong id="metricActive">0</strong><span>En control</span></button>
+      <button class="metric" id="metricCardPaused" type="button" data-filter="excluded"><strong id="metricPaused">0</strong><span>Excluidos</span></button>
     </section>
 
     <section class="role-control" aria-label="Roles a controlar">
@@ -86,6 +88,7 @@
     const $ = id => document.getElementById(id);
     let allRoles = [];
     let excludedRoleKeys = readExcludedRoles();
+    let roleCardFilter = null;
 
     function norm(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim()}
     function roleKey(value){return norm(value)}
@@ -115,14 +118,24 @@
       $("metricActive").textContent=active;
       $("metricPaused").textContent=Math.max(0,allRoles.length-active);
       $("controlledRolesStatus").textContent=`${active} de ${allRoles.length} rol(es) activos`;
+      [["metricCardTotal",""],["metricCardActive","active"],["metricCardPaused","excluded"]].forEach(([id,filter])=>{
+        const el=$(id);
+        if(el) el.classList.toggle("is-active", filter===(roleCardFilter||""));
+      });
+    }
+    function visibleRoles(){
+      if(roleCardFilter==="active") return allRoles.filter(role=>!excludedRoleKeys.has(roleKey(role)));
+      if(roleCardFilter==="excluded") return allRoles.filter(role=>excludedRoleKeys.has(roleKey(role)));
+      return allRoles;
     }
     function renderControlledRoles(){
       const box=$("controlledRoles");
-      box.innerHTML=allRoles.length?allRoles.map(role=>{
+      const roles=visibleRoles();
+      box.innerHTML=roles.length?roles.map(role=>{
         const key=roleKey(role);
         const checked=!excludedRoleKeys.has(key);
         return `<label class="role-card"><input type="checkbox" value="${escapeHtml(key)}" ${checked?"checked":""}><span class="role-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#0b7db2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span><span class="role-name">${escapeHtml(role)}</span><span class="role-state">${checked?"Incluido en el informe":"Excluido del control"}</span></span><span class="switch" aria-hidden="true"></span></label>`;
-      }).join(""):`<span class="role-control-note">No se encontraron roles configurados.</span>`;
+      }).join(""):`<span class="role-control-note">${allRoles.length?"Ningun rol coincide con este filtro.":"No se encontraron roles configurados."}</span>`;
       updateMetrics();
       box.querySelectorAll("input[type='checkbox']").forEach(input=>{
         input.addEventListener("change",()=>{
@@ -135,6 +148,13 @@
         });
       });
     }
+    ["metricCardTotal","metricCardActive","metricCardPaused"].forEach(id=>{
+      $(id).addEventListener("click",()=>{
+        const filter=$(id).dataset.filter||null;
+        roleCardFilter=(roleCardFilter===filter)?null:filter;
+        renderControlledRoles();
+      });
+    });
     async function init(){
       try{
         allRoles=(await fetchLoginRoles()).filter(Boolean).sort((a,b)=>a.localeCompare(b,"es"));

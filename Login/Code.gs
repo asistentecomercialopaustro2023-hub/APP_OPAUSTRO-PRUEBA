@@ -1,6 +1,7 @@
 ﻿const APP = {
   DEFAULT_DB_ID: '1D4DzASd5yh-tMhKqJvshFcOV4gathx9yAsZ0xHV1F3I',
   DB_ID_PROPERTY: 'OPAUSTRO_DB_ID',
+  TEST_DB_ID_PROPERTY: 'OPAUSTRO_TEST_DB_ID',
   LOGIN: 'BD_Login',
   INVENTORY: 'BD_Inventario',
   VISITS: 'BD_Visitas',
@@ -8,7 +9,8 @@
   ACCESS_LOG: 'BD_Accesos_App',
   SESSIONS: 'BD_Sesiones_App',
   ACCESS_ARCHIVE_AUTO_FOLDER_ID: '1sv9Ezc7apnre6eNfHsu-h9Xuzhvq8p03',
-  ACCESS_ARCHIVE_MANUAL_FOLDER_ID: '1XEwrZm8n6dDCs2KTrf1NTsmEuuOQrWFN'
+  ACCESS_ARCHIVE_MANUAL_FOLDER_ID: '1XEwrZm8n6dDCs2KTrf1NTsmEuuOQrWFN',
+  SESSION_STALE_MINUTES: 30
 };
 
 const LOGIN_CONFIG = {
@@ -280,6 +282,25 @@ function db_() {
   return SpreadsheetApp.openById(id);
 }
 
+function testDb_() {
+  const props = PropertiesService.getScriptProperties();
+  const existingId = props.getProperty(APP.TEST_DB_ID_PROPERTY);
+  if (existingId) {
+    try { return SpreadsheetApp.openById(existingId); } catch (error) { /* recreate below */ }
+  }
+  const ss = SpreadsheetApp.create('OPAUSTRO_DB_PRUEBAS_LOCALES');
+  props.setProperty(APP.TEST_DB_ID_PROPERTY, ss.getId());
+  return ss;
+}
+
+function isLocalEnv_(env) {
+  return String(env || '').trim().toLowerCase() === 'local';
+}
+
+function dbForEnv_(env) {
+  return isLocalEnv_(env) ? testDb_() : db_();
+}
+
 function recordAccessLog(payload) {
   try {
     const user = String(payload.user || payload.usuario || '').trim();
@@ -288,7 +309,7 @@ function recordAccessLog(payload) {
 
     const at = payload.at ? new Date(payload.at) : new Date();
     const safeDate = Number.isNaN(at.getTime()) ? new Date() : at;
-    const sheet = accessLogSheet_();
+    const sheet = accessLogSheet_(payload.env);
     sheet.appendRow([
       String(payload.id || Utilities.getUuid()),
       safeDate,
@@ -308,7 +329,7 @@ function recordAccessLog(payload) {
 function getAccessLogs(payload) {
   try {
     const limit = Math.min(Math.max(Number(payload.limit || 5000), 1), 10000);
-    const sheet = accessLogSheet_();
+    const sheet = accessLogSheet_(payload.env);
     const values = sheet.getDataRange().getValues();
     if (values.length < 2) return { success: true, logs: [] };
     const headers = values[0].map((header) => String(header || '').trim());
@@ -342,13 +363,21 @@ function getAccessLogs(payload) {
   }
 }
 
+function clearSheetRows_(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) sheet.deleteRows(2, lastRow - 1);
+}
+
 function clearAccessLogs(payload) {
   try {
     if (!checkAdminToken_(payload)) return { success: false, message: 'No autorizado.' };
 
-    const sheet = accessLogSheet_();
-    const lastRow = sheet.getLastRow();
-    if (lastRow > 1) sheet.deleteRows(2, lastRow - 1);
+    const env = payload && payload.env;
+    clearSheetRows_(accessLogSheet_(env));
+    if (!isLocalEnv_(env)) {
+      // Un borrado desde el sitio publicado tambien reinicia el sandbox de pruebas locales.
+      clearSheetRows_(accessLogSheet_('local'));
+    }
     return { success: true, message: 'Historial de accesos limpiado.', logs: [] };
   } catch (error) {
     console.error(error);
@@ -386,8 +415,8 @@ function monthKey_(date) {
   return Utilities.formatDate(d, Session.getScriptTimeZone() || 'America/Guayaquil', 'yyyy-MM');
 }
 
-function readAllAccessRows_() {
-  const sheet = accessLogSheet_();
+function readAllAccessRows_(env) {
+  const sheet = accessLogSheet_(env);
   const values = sheet.getDataRange().getValues();
   if (values.length < 2) return [];
   const headers = values[0].map((header) => String(header || '').trim());
@@ -453,7 +482,7 @@ function writeMonthlyArchive_(month, rows) {
 function exportAccessLogsBackup(payload) {
   try {
     if (!checkAdminToken_(payload)) return { success: false, message: 'No autorizado.' };
-    const rows = readAllAccessRows_();
+    const rows = readAllAccessRows_(payload.env);
     if (!rows.length) return { success: true, message: 'No hay accesos para respaldar.', fileName: null, total: 0 };
     const fileName = safeFileName_(payload && payload.fileName, 'respaldo_manual');
     const folder = manualArchiveFolder_();
@@ -543,6 +572,21 @@ function installMonthlyAccessArchiveTrigger() {
   return { success: true, message: 'Disparador mensual instalado: dia 1 de cada mes, 02:00.' };
 }
 
+function pruneStaleSessions_(sheet) {
+  const cutoff = new Date(Date.now() - APP.SESSION_STALE_MINUTES * 60 * 1000);
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return;
+  const headers = values[0].map((header) => String(header || '').trim());
+  const heartbeatIndex = headerIndex_(headers, 'Ultimo_Latido');
+  const rowsToDelete = [];
+  for (let i = 1; i < values.length; i++) {
+    const value = values[i][heartbeatIndex];
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime()) || date < cutoff) rowsToDelete.push(i + 1);
+  }
+  rowsToDelete.sort((a, b) => b - a).forEach((rowNumber) => sheet.deleteRow(rowNumber));
+}
+
 function recordSessionHeartbeat(payload) {
   try {
     const sessionId = String(payload.sessionId || payload.id || '').trim();
@@ -551,6 +595,7 @@ function recordSessionHeartbeat(payload) {
     if (!sessionId || !user || !role) return { success: false, message: 'Sesion incompleta.' };
 
     const sheet = sessionSheet_();
+    pruneStaleSessions_(sheet);
     const values = sheet.getDataRange().getValues();
     const headers = values[0].map((header) => String(header || '').trim());
     const idIndex = headerIndex_(headers, 'ID_Sesion');
@@ -598,7 +643,8 @@ function endSession(payload) {
     const idIndex = headerIndex_(headers, 'ID_Sesion');
     for (let i = 1; i < values.length; i++) {
       if (String(values[i][idIndex] || '') === sessionId) {
-        updateRow_(sheet, i + 1, headers, { Estado: 'DESCONECTADO', Fin: new Date(), Ultimo_Latido: new Date() });
+        // Se elimina la fila en vez de marcarla, para no acumular un historial de conexiones.
+        sheet.deleteRow(i + 1);
         return { success: true };
       }
     }
@@ -614,6 +660,7 @@ function getConnectedUsers(payload) {
     const thresholdSeconds = Math.max(Number(payload.thresholdSeconds || 90), 30);
     const cutoff = new Date(Date.now() - thresholdSeconds * 1000);
     const sheet = sessionSheet_();
+    pruneStaleSessions_(sheet);
     const values = sheet.getDataRange().getValues();
     const totalUsers = readLoginRows_().filter((user) => user.activo).length;
     if (values.length < 2) return { success: true, connected: 0, total: totalUsers, sessions: [] };
@@ -832,8 +879,8 @@ function accessLogHeaders_() {
   return ['ID_Acceso', 'Fecha_Hora', 'Usuario', 'Rol', 'Version_App', 'Dispositivo', 'User_Agent'];
 }
 
-function accessLogSheet_() {
-  return getOrCreateSheet_(db_(), APP.ACCESS_LOG, accessLogHeaders_());
+function accessLogSheet_(env) {
+  return getOrCreateSheet_(dbForEnv_(env), APP.ACCESS_LOG, accessLogHeaders_());
 }
 
 function sessionHeaders_() {
@@ -841,6 +888,8 @@ function sessionHeaders_() {
 }
 
 function sessionSheet_() {
+  // "Conectados ahora" es monitoreo en vivo, no historial: siempre la misma hoja,
+  // sin importar si el admin consulta el informe desde local o desde el sitio publicado.
   return getOrCreateSheet_(db_(), APP.SESSIONS, sessionHeaders_());
 }
 

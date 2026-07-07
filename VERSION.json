@@ -1,15 +1,17 @@
 {
   "app": "OPAUSTRO",
-  "version": "1.4.1",
-  "label": "OPAUSTRO v1.4.1",
+  "version": "1.4.2",
+  "label": "OPAUSTRO v1.4.2",
   "channel": "prueba",
   "publishedAt": "2026-07-07",
   "notes": [
-    "Correccion: Informe de accesos ahora respeta los roles activados en Administrar accesos y muestra los ingresos reales.",
-    "Nueva version: Informe de accesos permite eliminar el historial con respaldo previo (JSON en Drive) y limpieza total de cache local.",
-    "Nueva version: Archivado automatico mensual del historial de accesos hacia Google Drive, y consulta historica por mes con descarga en CSV."
+    "Nueva version: Separacion de entornos para el historial de accesos; las pruebas locales ya no afectan los datos publicados.",
+    "Correccion: Usuarios conectados ahora muestra siempre las sesiones reales, sin importar si se consulta desde local o desde el sitio publicado.",
+    "Correccion: Las sesiones se eliminan al desconectarse en vez de acumularse como historial.",
+    "Nueva version: Tarjetas de resumen clicables en Informe de accesos, Administrar accesos y Control de usuarios para filtrar por lo seleccionado.",
+    "Mejora: Boton para limpiar filtros y busquedas, y ventana de usuarios conectados en un modal en vez de texto seleccionable."
   ],
-  "releaseKey": "1.4.1",
+  "releaseKey": "1.4.2",
   "forceUpdate": false,
   "rollback": false
 }

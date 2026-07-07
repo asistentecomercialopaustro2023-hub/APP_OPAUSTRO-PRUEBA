@@ -1,5 +1,14 @@
 ﻿# Changelog OPAUSTRO
 
+## OPAUSTRO v1.4.2 - 2026-07-07
+
+- Separacion de entornos: el historial de accesos (eliminar/respaldar) usa una hoja de calculo distinta cuando se prueba en local, para no afectar los datos publicados. Borrar desde el sitio publicado tambien reinicia el sandbox local.
+- Corregido: Usuarios conectados ahora es siempre la misma vista en vivo (BD_Sesiones_App), sin importar si se consulta desde local o desde el sitio publicado.
+- Corregido: las sesiones se eliminan de la hoja al desconectarse (logout, cierre de pestaña o inactividad prolongada) en vez de acumularse como historial.
+- Agregadas tarjetas de resumen clicables en Informe de accesos, Administrar accesos y Control de usuarios: al seleccionar una, filtra la tabla o lista correspondiente.
+- Reemplazado el texto clicable de "usuarios conectados" por un boton de icono que abre una ventana superpuesta con el listado.
+- Agregado boton para limpiar todos los filtros y busquedas en Informe de accesos, reordenado junto a "Buscar" y "Sinc".
+
 ## OPAUSTRO v1.4.1 - 2026-07-07
 
 - Corregido Informe de accesos: ahora calcula los roles controlados aunque la pagina no tenga los chips de seleccion, por lo que respeta lo activado en Administrar accesos y muestra los ingresos reales (antes quedaba siempre en 0).

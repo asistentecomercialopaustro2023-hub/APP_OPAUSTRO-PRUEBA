@@ -20,14 +20,16 @@
     .primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 10px 24px rgba(7,104,151,.18)}
     .ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
     .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
-    .metric{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+    .metric{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);text-align:left;font-family:inherit;cursor:pointer;transition:box-shadow .15s ease,border-color .15s ease}
+    .metric:hover{box-shadow:0 14px 30px rgba(6,43,73,.12)}
     .metric::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--brand2),#28c6a2)}
     .metric span{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
     .metric strong{display:block;margin-top:10px;font-size:32px;letter-spacing:-.03em}
-    .filters{display:grid;grid-template-columns:1fr 220px 180px auto 58px;gap:12px;align-items:end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 10px 28px rgba(6,43,73,.05)}
-    .sync-action{display:grid;justify-items:center;gap:4px;align-self:end}
-    .sync-action button{width:44px;height:44px;display:grid;place-items:center;padding:0;border-radius:12px;background:#fff;color:var(--brand);border:1px solid #c7d8e4;box-shadow:0 8px 20px rgba(6,43,73,.07);font-size:18px}
-    .sync-action small{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+    .metric.is-active{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(11,125,178,.16)}
+    .metric.is-active::before{background:linear-gradient(180deg,var(--brand),var(--brand))}
+    .filters{display:grid;grid-template-columns:1fr 220px 180px auto 44px 44px;gap:12px;align-items:end;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 10px 28px rgba(6,43,73,.05)}
+    .icon-square{width:44px;height:44px;display:grid;place-items:center;padding:0;border-radius:12px;background:#fff;color:var(--brand);border:1px solid #c7d8e4;box-shadow:0 8px 20px rgba(6,43,73,.07);font-size:18px;line-height:1}
+    .icon-square.clear-filters-btn{background:#fdeeee;color:#b3261e;border-color:#f3c7c4;font-size:20px}
     .role-control{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px;box-shadow:0 10px 28px rgba(6,43,73,.05)}
     .role-control-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
     .role-control-title{font-weight:900;color:var(--text)}
@@ -43,7 +45,13 @@
     .panel-title{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:15px 16px;border-bottom:1px solid var(--line);font-weight:900;background:linear-gradient(180deg,#fff,var(--soft))}
     .status{font-size:13px;color:var(--muted);font-weight:700}
     .status.is-live{color:var(--ok)}
-    .status.is-local{color:#b45309}.online-toggle{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;padding:0;cursor:pointer}.online-toggle:hover{transform:none;text-decoration:underline}.online-arrow{display:inline-block;transition:transform .18s ease}.online-toggle[aria-expanded="true"] .online-arrow{transform:rotate(90deg)}.online-list{display:none;margin-top:-8px;margin-bottom:18px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgba(6,43,73,.05);overflow:hidden}.online-list.is-open{display:block}.online-list-head{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:900;background:linear-gradient(180deg,#fff,var(--soft))}.online-users{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;padding:12px}.online-user{border:1px solid #dce8f0;border-radius:12px;padding:11px;background:#f9fdff}.online-user strong{display:block;color:var(--text)}.online-user span{display:block;margin-top:3px;color:var(--muted);font-size:12px;font-weight:800}
+    .status.is-local{color:#b45309}
+    .icon-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #c7d8e4;background:#fff;color:var(--brand);font:inherit;font-weight:900;font-size:12px;padding:7px 11px;border-radius:999px;cursor:pointer}
+    .icon-btn:hover{background:#f2f9fd}
+    .online-users{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:14px 0}
+    .online-user{border:1px solid #dce8f0;border-radius:12px;padding:11px;background:#f9fdff}
+    .online-user strong{display:block;color:var(--text)}
+    .online-user span{display:block;margin-top:3px;color:var(--muted);font-size:12px;font-weight:800}
     .table-wrap{overflow:auto}
     table{width:100%;border-collapse:collapse;min-width:760px}
     th,td{padding:13px 14px;border-bottom:1px solid #e5edf3;text-align:left;vertical-align:top}
@@ -69,10 +77,13 @@
     .modal-label{display:grid;gap:6px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;margin-bottom:14px}
     .modal-error{color:#b3261e!important;font-size:12px!important;font-weight:800;background:#fdeeee;border-radius:8px;padding:9px 11px}
     .modal-error[hidden]{display:none}
+    .env-badge{display:inline-block!important;margin:0 0 12px!important;padding:6px 11px;border-radius:999px;font-size:11px!important;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+    .env-badge.env-local{background:#fff7e6;color:#8a6300}
+    .env-badge.env-prod{background:#fdeeee;color:#b3261e}
     .modal-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px}
     .danger-outline{color:#b3261e;border-color:#f3c7c4}
     html.embed-mode body{padding:22px}
-    @media(max-width:760px){body{padding:16px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr}.sync-action{justify-items:start}.metric strong{font-size:26px}.role-control-head{display:block}.role-control-note{margin-top:6px}.panel-title{flex-wrap:wrap}.modal-actions{justify-content:stretch}.modal-actions button{flex:1}}
+    @media(max-width:760px){body{padding:16px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}.metric strong{font-size:26px}.role-control-head{display:block}.role-control-note{margin-top:6px}.panel-title{flex-wrap:wrap}.modal-actions{justify-content:stretch}.modal-actions button{flex:1}}
   </style>
   <script>
     if(new URLSearchParams(location.search).get("embed")==="1") document.documentElement.classList.add("embed-mode");
@@ -91,25 +102,24 @@
         <input id="dateFilter" type="date">
       </label>
       <button class="primary" type="submit">Buscar</button>
-      <div class="sync-action" aria-label="Sincronizar accesos">
-        <button class="ghost" id="refreshBtn" type="button" title="Actualizar accesos" aria-label="Actualizar accesos">&#8635;</button>
-        <small>Sinc</small>
-      </div>
+      <button class="icon-square clear-filters-btn" id="clearFiltersBtn" type="button" title="Quitar filtros y busquedas" aria-label="Quitar filtros y busquedas">&times;</button>
+      <button class="icon-square" id="refreshBtn" type="button" title="Actualizar accesos" aria-label="Actualizar accesos">&#8635;</button>
     </form>
 
     <section class="metrics" aria-label="Resumen de accesos">
-      <article class="metric"><span>Ingresos hoy</span><strong id="countDay">0</strong></article>
-      <article class="metric"><span>Semana actual</span><strong id="countWeek">0</strong></article>
-      <article class="metric"><span>Mes actual</span><strong id="countMonth">0</strong></article>
-      <article class="metric"><span>Usuarios &uacute;nicos</span><strong id="countUsers">0</strong></article>
+      <button class="metric" id="cardDay" type="button" data-range="day"><span>Ingresos hoy</span><strong id="countDay">0</strong></button>
+      <button class="metric" id="cardWeek" type="button" data-range="week"><span>Semana actual</span><strong id="countWeek">0</strong></button>
+      <button class="metric" id="cardMonth" type="button" data-range="month"><span>Mes actual</span><strong id="countMonth">0</strong></button>
+      <button class="metric" id="cardUsers" type="button"><span>Usuarios &uacute;nicos</span><strong id="countUsers">0</strong></button>
     </section>
-
-    <section class="online-list" id="onlineList" aria-label="Usuarios conectados"><div class="online-list-head">Usuarios conectados ahora</div><div class="online-users" id="onlineUsers"><div class="empty">Sin usuarios conectados.</div></div></section>
 
     <section class="panel">
       <div class="panel-title">
         <span>Accesos por usuario</span>
-        <span class="status" id="tableStatus">0 registros</span>
+        <div class="panel-title-actions">
+          <span class="status is-live" id="onlineCount">0 conectado(s)</span>
+          <button class="icon-btn" id="onlineToggle" type="button" title="Ver usuarios conectados" aria-label="Ver usuarios conectados">&#128101; <span class="online-arrow">&#10132;</span></button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -174,6 +184,7 @@
   <div class="modal-overlay" id="deleteModalOverlay" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-label="Eliminar historial de accesos">
       <h2>Eliminar historial de accesos</h2>
+      <p class="env-badge" id="deleteEnvBadge"></p>
       <p>Esta accion borra permanentemente el historial de accesos del reporte en vivo y limpia la copia local de este navegador. Si guardas, se crea un respaldo liviano (JSON) en Drive con el nombre que elijas.</p>
       <label class="modal-label">Token de administrador
         <input type="password" id="adminTokenInput" placeholder="Token requerido">
@@ -190,6 +201,26 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="onlineModalOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Usuarios conectados">
+      <h2>Usuarios conectados ahora</h2>
+      <div class="online-users" id="onlineUsers"><div class="empty">Sin usuarios conectados.</div></div>
+      <div class="modal-actions">
+        <button class="primary" id="closeOnlineModalBtn" type="button">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="uniqueUsersModalOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Usuarios unicos">
+      <h2>Usuarios &uacute;nicos en la vista actual</h2>
+      <div class="online-users" id="uniqueUsersList"><div class="empty">Sin datos.</div></div>
+      <div class="modal-actions">
+        <button class="primary" id="closeUniqueModalBtn" type="button">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const ACCESS_API_URL = "https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec";
     const LOG_KEY = "opaustro_access_log";
@@ -199,13 +230,15 @@
     let rows = [];
     let loginRoles = [];
     let lastConnectedUsers = [];
-    let onlineListOpen = false;
     let allRoles = [];
     let excludedRoleKeys = new Set();
     let sourceLabel = "local";
     let refreshTimer = null;
     let archiveView = null;
+    let quickRange = null;
     const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+    function isLocalEnv(){ return /^(localhost|127\.)/i.test(location.hostname); }
+    function appEnv(){ return isLocalEnv()?"local":"prod"; }
 
     function parseDate(value){const d=new Date(value);return Number.isNaN(d.getTime())?null:d}
     function startOfDay(date){return new Date(date.getFullYear(),date.getMonth(),date.getDate())}
@@ -216,7 +249,6 @@
     function roleKey(value){return norm(value)}
     function readExcludedRoles(){try{const raw=JSON.parse(localStorage.getItem(ROLE_EXCLUDED_KEY)||"null");return Array.isArray(raw)?new Set(raw.map(roleKey)):new Set(DEFAULT_EXCLUDED_ROLE_KEYS)}catch(_){return new Set(DEFAULT_EXCLUDED_ROLE_KEYS)}}
     function writeExcludedRoles(){try{localStorage.setItem(ROLE_EXCLUDED_KEY,JSON.stringify([...excludedRoleKeys]))}catch(_){}}
-    function localRows(){try{return JSON.parse(localStorage.getItem(LOG_KEY)||"[]").filter(r=>r&&r.user&&r.role&&r.at)}catch(_){return []}}
     async function fetchLoginRoles(){
       if(!ACCESS_API_URL) return [];
       const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},cache:"no-store",body:JSON.stringify({action:"getLoginData",payload:{}})});
@@ -227,7 +259,7 @@
     }
     async function fetchCentralRows(){
       if(!ACCESS_API_URL) throw new Error("Sin API");
-      const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"getAccessLogs",payload:{limit:5000}})});
+      const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"getAccessLogs",payload:{limit:5000,env:appEnv()}})});
       const text=await response.text();
       const data=JSON.parse(String(text||"{}"));
       if(!data.success||!Array.isArray(data.logs)) throw new Error(data.message||"Sin historial central");
@@ -241,26 +273,16 @@
       if(!data.success) return {connected:0,total:0,sessions:[]};
       return {connected:Number(data.connected||0),total:Number(data.total||0),sessions:Array.isArray(data.sessions)?data.sessions:[]};
     }
-    function mergeRows(primary, secondary){
-      const seen=new Set();
-      return primary.concat(secondary).filter(row=>{
-        const key=String(row.id||`${row.user}|${row.role}|${row.at}`);
-        if(seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-    }
     async function loadRows(){
       try{
         const result=await Promise.allSettled([fetchCentralRows(),fetchLoginRoles()]);
         const centralOk=result[0].status==="fulfilled";
-        const central=centralOk?result[0].value:[];
+        rows=centralOk?result[0].value:[];
         loginRoles=result[1].status==="fulfilled"?result[1].value:loginRoles;
-        rows=mergeRows(central,localRows());
-        sourceLabel=centralOk?"central":"local";
+        sourceLabel=centralOk?"central":"sin-conexion";
       }catch(_){
-        rows=localRows();
-        sourceLabel="local";
+        rows=[];
+        sourceLabel="sin-conexion";
       }
     }
     function uniqueRoles(){const byKey=new Map();loginRoles.concat(rows.map(r=>String(r.role).trim())).filter(Boolean).forEach(role=>{const key=roleKey(role);if(key&&!byKey.has(key))byKey.set(key,role)});return [...byKey.values()].sort((a,b)=>a.localeCompare(b,"es"))}
@@ -298,7 +320,13 @@
       const role=norm($("roleFilter").value);
       const date=$("dateFilter").value;
       const controlled=new Set(controlledRoles().map(roleKey));
-      return rows.filter(row=>(role?norm(row.role)===role:controlled.has(roleKey(row.role)))&&(!q||norm(row.user).includes(q))&&(!date||sameDate(row,date)));
+      let list=rows.filter(row=>(role?norm(row.role)===role:controlled.has(roleKey(row.role)))&&(!q||norm(row.user).includes(q))&&(!date||sameDate(row,date)));
+      if(quickRange){
+        const now=new Date();
+        const start=quickRange==="day"?startOfDay(now):quickRange==="week"?startOfWeek(now):startOfMonth(now);
+        list=list.filter(row=>inRange(row,start));
+      }
+      return list;
     }
     async function render(){
       await loadRows();
@@ -323,31 +351,48 @@
         if(!item.last||parseDate(row.at)>parseDate(item.last)) item.last=row.at;
       });
       const list=[...grouped.values()].sort((a,b)=>parseDate(b.last)-parseDate(a.last));
-      $("accessBody").innerHTML=list.length?list.map(item=>`<tr><td class="user">${escapeHtml(item.user)}</td><td><span class="role">${escapeHtml(item.role)}</span></td><td>${item.day}</td><td>${item.week}</td><td>${item.month}</td><td>${item.total}</td><td>${escapeHtml(fmt(item.last))}</td></tr>`).join(""):`<tr><td class="empty" colspan="7">No hay accesos registrados para los roles y filtros seleccionados.</td></tr>`;
-      const tableStatus=$("tableStatus");
-      tableStatus.textContent=`${list.length} usuario(s) / ${view.length} acceso(s) - ${sourceLabel==="central"?"historial central en vivo":"historial local"}`;
-      tableStatus.className=`status ${sourceLabel==="central"?"is-live":"is-local"}`;
+      const connError=sourceLabel!=="central";
+      $("accessBody").innerHTML=connError?`<tr><td class="empty" colspan="7">Sin conexion con el servidor. Los datos mostrados pueden estar desactualizados.</td></tr>`:(list.length?list.map(item=>`<tr><td class="user">${escapeHtml(item.user)}</td><td><span class="role">${escapeHtml(item.role)}</span></td><td>${item.day}</td><td>${item.week}</td><td>${item.month}</td><td>${item.total}</td><td>${escapeHtml(fmt(item.last))}</td></tr>`).join(""):`<tr><td class="empty" colspan="7">No hay accesos registrados para los roles y filtros seleccionados.</td></tr>`);
 
       if(!archiveView){
         const history=view.slice().sort((a,b)=>parseDate(b.at)-parseDate(a.at));
         $("historyBody").innerHTML=history.length?history.map(row=>`<tr><td><span class="role">${escapeHtml(row.role)}</span></td><td class="user">${escapeHtml(row.user)}</td><td>${escapeHtml(fmt(row.at))}</td></tr>`).join(""):`<tr><td class="empty" colspan="3">No hay historial para los filtros seleccionados.</td></tr>`;
         $("historyStatus").textContent=`${history.length} acceso(s)`;
       }
+      updateCardStates();
       fetchConnectedUsers().then((online)=>{
         lastConnectedUsers=Array.isArray(online.sessions)?online.sessions:[];
-        tableStatus.innerHTML=`<button class="online-toggle" id="onlineToggle" type="button" aria-expanded="${onlineListOpen?"true":"false"}">${online.connected} usuario(s) conectado(s) de ${online.total}<span class="online-arrow">›</span></button>`;
-        tableStatus.className="status is-live";
-        const toggle=$("onlineToggle");
-        if(toggle) toggle.addEventListener("click",()=>{onlineListOpen=!onlineListOpen;renderOnlineUsers();});
+        $("onlineCount").textContent=`${online.connected} conectado(s) de ${online.total}`;
         renderOnlineUsers();
       }).catch(()=>{});
     }
     function renderOnlineUsers(){
-      const panel=$("onlineList");
       const box=$("onlineUsers");
-      if(!panel||!box) return;
-      panel.classList.toggle("is-open", onlineListOpen);
-      box.innerHTML=lastConnectedUsers.length?lastConnectedUsers.map(item=>`<div class="online-user"><strong>${escapeHtml(item.user)}</strong><span>${escapeHtml(item.role)} · ${escapeHtml(fmt(item.lastHeartbeat))}</span></div>`).join(""):`<div class="empty">No hay usuarios conectados en este momento.</div>`;
+      if(!box) return;
+      box.innerHTML=lastConnectedUsers.length?lastConnectedUsers.map(item=>`<div class="online-user"><strong>${escapeHtml(item.user)}</strong><span>${escapeHtml(item.role)} &middot; ${escapeHtml(fmt(item.lastHeartbeat))}</span></div>`).join(""):`<div class="empty">No hay usuarios conectados en este momento.</div>`;
+    }
+    function renderUniqueUsersModal(){
+      const box=$("uniqueUsersList");
+      if(!box) return;
+      const view=filteredRows();
+      const byUser=new Map();
+      view.forEach(row=>{
+        const key=`${norm(row.user)}|${norm(row.role)}`;
+        if(!byUser.has(key)) byUser.set(key,{user:row.user,role:row.role,last:row.at});
+        else if(parseDate(row.at)>parseDate(byUser.get(key).last)) byUser.get(key).last=row.at;
+      });
+      const list=[...byUser.values()].sort((a,b)=>a.user.localeCompare(b.user,"es"));
+      box.innerHTML=list.length?list.map(item=>`<div class="online-user"><strong>${escapeHtml(item.user)}</strong><span>${escapeHtml(item.role)} &middot; ultimo ingreso ${escapeHtml(fmt(item.last))}</span></div>`).join(""):`<div class="empty">Sin usuarios en la vista actual.</div>`;
+    }
+    function updateCardStates(){
+      ["cardDay","cardWeek","cardMonth"].forEach(id=>{
+        const el=$(id);
+        if(el) el.classList.toggle("is-active", el.dataset.range===quickRange);
+      });
+    }
+    function toggleQuickRange(range){
+      quickRange=(quickRange===range)?null:range;
+      render();
     }
     async function callAccessApi(action,payload){
       if(!ACCESS_API_URL) return {success:false,message:"Sin API"};
@@ -427,6 +472,9 @@
       $("adminTokenInput").value="";
       $("backupFileNameInput").value=suggestedBackupName();
       $("deleteModalError").hidden=true;
+      const badge=$("deleteEnvBadge");
+      badge.textContent=isLocalEnv()?"Entorno: pruebas locales (no afecta lo publicado)":"Entorno: sitio publicado (tambien limpia el sandbox local)";
+      badge.className=`env-badge ${isLocalEnv()?"env-local":"env-prod"}`;
       $("deleteModalOverlay").hidden=false;
       $("adminTokenInput").focus();
     }
@@ -464,9 +512,9 @@
       if(!token){ showModalError("Ingresa el token de administrador."); return; }
       if(!fileName){ showModalError("Ingresa un nombre para el respaldo."); return; }
       setModalBusy(true);
-      const backup=await callAccessApi("exportAccessLogsBackup",{token,fileName});
+      const backup=await callAccessApi("exportAccessLogsBackup",{token,fileName,env:appEnv()});
       if(!backup.success){ setModalBusy(false); showModalError(backup.message||"No se pudo respaldar el historial. Verifica el token."); return; }
-      const clear=await callAccessApi("clearAccessLogs",{token});
+      const clear=await callAccessApi("clearAccessLogs",{token,env:appEnv()});
       setModalBusy(false);
       if(!clear.success){ showModalError(clear.message||"Se respaldo el historial pero no se pudo eliminar."); return; }
       await finishDeletion();
@@ -476,7 +524,7 @@
       if(!token){ showModalError("Ingresa el token de administrador."); return; }
       if(!confirm("Esto eliminara el historial sin guardar una copia. ¿Continuar?")) return;
       setModalBusy(true);
-      const clear=await callAccessApi("clearAccessLogs",{token});
+      const clear=await callAccessApi("clearAccessLogs",{token,env:appEnv()});
       setModalBusy(false);
       if(!clear.success){ showModalError(clear.message||"No se pudo eliminar. Verifica el token."); return; }
       await finishDeletion();
@@ -485,6 +533,13 @@
     $("roleFilter").addEventListener("change",render);
     $("dateFilter").addEventListener("change",render);
     $("refreshBtn").addEventListener("click",render);
+    $("clearFiltersBtn").addEventListener("click",()=>{
+      $("userFilter").value="";
+      $("roleFilter").value="";
+      $("dateFilter").value="";
+      quickRange=null;
+      render();
+    });
     $("deleteHistoryBtn").addEventListener("click",openDeleteModal);
     $("cancelDeleteBtn").addEventListener("click",closeDeleteModal);
     $("saveAndDeleteBtn").addEventListener("click",handleSaveAndDelete);
@@ -493,6 +548,15 @@
     $("archiveQueryBtn").addEventListener("click",handleArchiveQuery);
     $("archiveBackBtn").addEventListener("click",exitArchiveView);
     $("archiveCsvBtn").addEventListener("click",handleArchiveCsv);
+    $("cardDay").addEventListener("click",()=>toggleQuickRange("day"));
+    $("cardWeek").addEventListener("click",()=>toggleQuickRange("week"));
+    $("cardMonth").addEventListener("click",()=>toggleQuickRange("month"));
+    $("cardUsers").addEventListener("click",()=>{ renderUniqueUsersModal(); $("uniqueUsersModalOverlay").hidden=false; });
+    $("closeUniqueModalBtn").addEventListener("click",()=>{ $("uniqueUsersModalOverlay").hidden=true; });
+    $("uniqueUsersModalOverlay").addEventListener("click",e=>{ if(e.target.id==="uniqueUsersModalOverlay") $("uniqueUsersModalOverlay").hidden=true; });
+    $("onlineToggle").addEventListener("click",()=>{ renderOnlineUsers(); $("onlineModalOverlay").hidden=false; });
+    $("closeOnlineModalBtn").addEventListener("click",()=>{ $("onlineModalOverlay").hidden=true; });
+    $("onlineModalOverlay").addEventListener("click",e=>{ if(e.target.id==="onlineModalOverlay") $("onlineModalOverlay").hidden=true; });
     window.addEventListener("storage",event=>{if(event.key===LOG_KEY)render()});
     window.addEventListener("focus",render);
     refreshTimer=setInterval(render,30000);
