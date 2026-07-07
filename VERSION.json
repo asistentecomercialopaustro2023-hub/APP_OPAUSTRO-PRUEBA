@@ -1,15 +1,15 @@
-﻿{
+{
   "app": "OPAUSTRO",
-  "version": "1.4.0",
-  "label": "OPAUSTRO v1.4.0",
+  "version": "1.4.1",
+  "label": "OPAUSTRO v1.4.1",
   "channel": "prueba",
   "publishedAt": "2026-07-07",
   "notes": [
-    "Nueva version: Informe de accesos lista todos los roles existentes y permite desplegar usuarios conectados.",
-    "Nueva version: Control de usuarios agrega limpieza de filtros, seleccion de roles existentes y confirmacion previa al guardado.",
-    "Nueva version: Gerencia accede solo al informe de accesos; Administrador conserva el control completo."
+    "Correccion: Informe de accesos ahora respeta los roles activados en Administrar accesos y muestra los ingresos reales.",
+    "Nueva version: Informe de accesos permite eliminar el historial con respaldo previo (JSON en Drive) y limpieza total de cache local.",
+    "Nueva version: Archivado automatico mensual del historial de accesos hacia Google Drive, y consulta historica por mes con descarga en CSV."
   ],
-  "releaseKey": "1.4.0",
+  "releaseKey": "1.4.1",
   "forceUpdate": false,
   "rollback": false
 }

@@ -1,5 +1,12 @@
 ﻿# Changelog OPAUSTRO
 
+## OPAUSTRO v1.4.1 - 2026-07-07
+
+- Corregido Informe de accesos: ahora calcula los roles controlados aunque la pagina no tenga los chips de seleccion, por lo que respeta lo activado en Administrar accesos y muestra los ingresos reales (antes quedaba siempre en 0).
+- Agregado boton "Eliminar historial" en Informe de accesos con confirmacion, respaldo opcional con nombre personalizado y limpieza total de la copia local del navegador.
+- Agregado archivado automatico mensual del historial de accesos hacia Google Drive (JSON liviano), con panel de consulta historica por mes y descarga en CSV.
+- Se actualizo `VERSION.json`, `APP_VERSION`, `APP_RELEASE` y `APP_RELEASE_KEY` para notificar actualizacion a apps instaladas.
+
 ## OPAUSTRO v1.3 - 2026-07-03
 
 - Control de acceso queda sin cabecera interna duplicada y con sincronizacion compacta junto a la busqueda.

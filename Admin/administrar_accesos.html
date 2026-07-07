@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Administrar accesos</title>
+  <style>
+    :root{
+      --bg:#eef5fa;--panel:#fff;--text:#062b49;--muted:#6d8497;--brand:#0b7db2;--brand2:#0f9ccc;
+      --line:#d5e3ec;--soft:#f6fbfe;--ok:#008060;--off:#9aaabd;--shadow:0 18px 44px rgba(6,43,73,.1)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif;padding:28px}
+    .wrap{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+    .access-hero,.role-control{background:linear-gradient(180deg,#fff,#f9fdff);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+    .access-hero{display:grid;grid-template-columns:1.2fr repeat(3,minmax(150px,.36fr));gap:14px;align-items:stretch;padding:20px}
+    .hero-copy{display:flex;align-items:center;gap:14px;min-width:0}
+    .hero-icon{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,#dff3fb,#fff);border:1px solid #c9e4f0;display:grid;place-items:center;font-size:28px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+    .eyebrow{display:block;color:var(--brand);font-size:11px;font-weight:950;letter-spacing:.16em;text-transform:uppercase;margin-bottom:4px}
+    h1{margin:0;font-size:25px;line-height:1.12;letter-spacing:0}
+    .hero-copy p{margin:7px 0 0;color:var(--muted);font-size:14px;line-height:1.45}
+    .metric{border:1px solid #dbe8f0;border-radius:16px;background:#fff;padding:14px;display:grid;align-content:center;gap:4px}
+    .metric strong{font-size:26px;line-height:1;color:var(--text)}
+    .metric span{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:900}
+    .role-control{padding:18px}
+    .role-control-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+    .role-control-title{display:block;font-size:18px;font-weight:950;color:var(--text);line-height:1.15}
+    .role-control-help{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+    .role-control-note{font-size:12px;color:var(--muted);font-weight:900;background:#f3f8fb;border:1px solid var(--line);border-radius:999px;padding:7px 10px;white-space:nowrap}
+    .role-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+    .role-card{position:relative;display:grid;grid-template-columns:42px 1fr auto;align-items:center;gap:12px;min-height:78px;padding:14px;border:1px solid #dbe8f0;border-radius:16px;background:#fff;color:#36546a;cursor:pointer;user-select:none;transition:.18s ease}
+    .role-card:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(6,43,73,.08)}
+    .role-card input{position:absolute;opacity:0;pointer-events:none}
+    .role-badge{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:#eef7fc;border:1px solid #cde5f0}.hero-icon svg{width:30px;height:30px}.role-badge svg{width:24px;height:24px}
+    .role-name{display:block;font-weight:950;color:var(--text);font-size:15px}
+    .role-state{display:block;margin-top:3px;color:var(--muted);font-size:12px;font-weight:750}
+    .switch{width:46px;height:26px;border-radius:999px;background:#d6e1e9;position:relative;transition:.18s ease}
+    .switch::after{content:"";position:absolute;top:4px;left:4px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);transition:.18s ease}
+    .role-card:has(input:checked){border-color:#93d4ec;background:linear-gradient(135deg,#e8f7fd,#fff)}
+    .role-card:has(input:checked) .switch{background:linear-gradient(135deg,var(--brand),var(--brand2))}
+    .role-card:has(input:checked) .switch::after{left:24px}
+    .role-card:has(input:checked) .role-state{color:var(--ok)}
+    .status-card{margin-top:16px;border:1px solid var(--line);border-radius:16px;background:var(--soft);padding:13px 14px;color:var(--muted);font-size:13px;font-weight:750}
+    .status-card strong{color:var(--text)}
+    html.embed-mode body{padding:22px}
+    @media(max-width:900px){.access-hero{grid-template-columns:1fr 1fr}.hero-copy{grid-column:1/-1}.role-control-head{align-items:flex-start;flex-direction:column}.role-control-note{white-space:normal}}
+    @media(max-width:620px){body{padding:14px}.access-hero{grid-template-columns:1fr}.role-chips{grid-template-columns:1fr}h1{font-size:22px}}
+  </style>
+  <script>
+    if(new URLSearchParams(location.search).get("embed")==="1") document.documentElement.classList.add("embed-mode");
+  </script>
+</head>
+<body>
+  <main class="wrap">
+    <section class="access-hero" aria-label="Resumen de administración de accesos">
+      <div class="hero-copy">
+        <div class="hero-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#0b7db2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6l7-3z"/><path d="M9 12l2 2 4-5"/></svg></div>
+        <div>
+          <span class="eyebrow">Gobierno de acceso</span>
+          <h1>Administrar accesos</h1>
+          <p>Define qué roles se contabilizan en el informe central sin afectar el inicio de sesión ni la operación de los módulos.</p>
+        </div>
+      </div>
+      <div class="metric"><strong id="metricTotal">0</strong><span>Roles detectados</span></div>
+      <div class="metric"><strong id="metricActive">0</strong><span>En control</span></div>
+      <div class="metric"><strong id="metricPaused">0</strong><span>Excluidos</span></div>
+    </section>
+
+    <section class="role-control" aria-label="Roles a controlar">
+      <div class="role-control-head">
+        <div>
+          <span class="role-control-title">Roles incluidos en el control</span>
+          <p class="role-control-help">Activa únicamente los roles que deben registrarse y medirse en el informe de accesos.</p>
+        </div>
+        <span class="role-control-note" id="controlledRolesStatus">Cargando roles...</span>
+      </div>
+      <div class="role-chips" id="controlledRoles"></div>
+      <div class="status-card" id="saveStatus">La configuración se guarda en este navegador para las pruebas actuales.</div>
+    </section>
+  </main>
+
+  <script>
+    const ACCESS_API_URL = "https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec";
+    const ROLE_EXCLUDED_KEY = "opaustro_access_roles_excluded";
+    const DEFAULT_EXCLUDED_ROLE_KEYS = new Set(["ADMIN", "ADMINISTRADOR", "GERENCIA", "GERENTE"]);
+    const $ = id => document.getElementById(id);
+    let allRoles = [];
+    let excludedRoleKeys = readExcludedRoles();
+
+    function norm(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim()}
+    function roleKey(value){return norm(value)}
+    function escapeHtml(value){return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
+    function readExcludedRoles(){
+      try{
+        const raw=JSON.parse(localStorage.getItem(ROLE_EXCLUDED_KEY)||"null");
+        return Array.isArray(raw)?new Set(raw.map(roleKey)):new Set(DEFAULT_EXCLUDED_ROLE_KEYS);
+      }catch(_){
+        return new Set(DEFAULT_EXCLUDED_ROLE_KEYS);
+      }
+    }
+    function writeExcludedRoles(){
+      try{localStorage.setItem(ROLE_EXCLUDED_KEY,JSON.stringify([...excludedRoleKeys]))}catch(_){}
+    }
+    async function fetchLoginRoles(){
+      if(!ACCESS_API_URL) return [];
+      const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},cache:"no-store",body:JSON.stringify({action:"getLoginData",payload:{}})});
+      const text=await response.text();
+      const data=JSON.parse(String(text||"{}"));
+      if(!data.success||!data.usersByRole) return [];
+      return Object.keys(data.usersByRole).filter(Boolean);
+    }
+    function updateMetrics(){
+      const active=allRoles.filter(role=>!excludedRoleKeys.has(roleKey(role))).length;
+      $("metricTotal").textContent=allRoles.length;
+      $("metricActive").textContent=active;
+      $("metricPaused").textContent=Math.max(0,allRoles.length-active);
+      $("controlledRolesStatus").textContent=`${active} de ${allRoles.length} rol(es) activos`;
+    }
+    function renderControlledRoles(){
+      const box=$("controlledRoles");
+      box.innerHTML=allRoles.length?allRoles.map(role=>{
+        const key=roleKey(role);
+        const checked=!excludedRoleKeys.has(key);
+        return `<label class="role-card"><input type="checkbox" value="${escapeHtml(key)}" ${checked?"checked":""}><span class="role-badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#0b7db2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span><span class="role-name">${escapeHtml(role)}</span><span class="role-state">${checked?"Incluido en el informe":"Excluido del control"}</span></span><span class="switch" aria-hidden="true"></span></label>`;
+      }).join(""):`<span class="role-control-note">No se encontraron roles configurados.</span>`;
+      updateMetrics();
+      box.querySelectorAll("input[type='checkbox']").forEach(input=>{
+        input.addEventListener("change",()=>{
+          if(input.checked) excludedRoleKeys.delete(input.value);
+          else excludedRoleKeys.add(input.value);
+          writeExcludedRoles();
+          renderControlledRoles();
+          const active=allRoles.filter(role=>!excludedRoleKeys.has(roleKey(role))).length;
+          $("saveStatus").innerHTML=`<strong>Guardado.</strong> El informe tomará ${active} rol(es) activo(s).`;
+        });
+      });
+    }
+    async function init(){
+      try{
+        allRoles=(await fetchLoginRoles()).filter(Boolean).sort((a,b)=>a.localeCompare(b,"es"));
+        renderControlledRoles();
+      }catch(error){
+        $("controlledRoles").innerHTML='<span class="role-control-note">No se pudo cargar la lista de roles.</span>';
+        $("controlledRolesStatus").textContent="Sin conexión";
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

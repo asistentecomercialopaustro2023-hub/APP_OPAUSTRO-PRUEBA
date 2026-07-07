@@ -52,8 +52,27 @@
     td{font-size:14px}
     .user{font-weight:900;color:#05365a}.role{display:inline-flex;border-radius:999px;background:#e7f3fa;color:#075f9b;padding:4px 9px;font-size:12px;font-weight:900}
     .empty{padding:34px;text-align:center;color:var(--muted)}
+    .panel-title-actions{display:flex;align-items:center;gap:14px}
+    .danger-btn{background:#fdeeee;color:#b3261e;border:1px solid #f3c7c4;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:900;display:inline-flex;align-items:center;gap:6px}
+    .danger-btn:hover{background:#fbe0df;box-shadow:0 8px 18px rgba(179,38,30,.15)}
+    .archive-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;background:#fff7e6;border-bottom:1px solid #f0dfb0;color:#7a5b06;font-size:13px;font-weight:800}
+    .archive-banner[hidden]{display:none}
+    .ghost.small{padding:7px 12px;font-size:12px;border-radius:8px}
+    .archive-panel .archive-controls{display:flex;align-items:end;gap:12px;padding:16px;flex-wrap:wrap}
+    .archive-panel .archive-controls label{min-width:220px}
+    .archive-hint{margin:0;padding:0 16px 16px;color:var(--muted);font-size:12px}
+    .modal-overlay{position:fixed;inset:0;background:rgba(6,20,32,.45);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+    .modal-overlay[hidden]{display:none}
+    .modal{background:#fff;border-radius:16px;max-width:460px;width:100%;padding:26px;box-shadow:0 30px 70px rgba(6,20,32,.35)}
+    .modal h2{margin:0 0 10px;font-size:19px}
+    .modal p{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.5}
+    .modal-label{display:grid;gap:6px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;margin-bottom:14px}
+    .modal-error{color:#b3261e!important;font-size:12px!important;font-weight:800;background:#fdeeee;border-radius:8px;padding:9px 11px}
+    .modal-error[hidden]{display:none}
+    .modal-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px}
+    .danger-outline{color:#b3261e;border-color:#f3c7c4}
     html.embed-mode body{padding:22px}
-    @media(max-width:760px){body{padding:16px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr}.sync-action{justify-items:start}.metric strong{font-size:26px}.role-control-head{display:block}.role-control-note{margin-top:6px}}
+    @media(max-width:760px){body{padding:16px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr}.sync-action{justify-items:start}.metric strong{font-size:26px}.role-control-head{display:block}.role-control-note{margin-top:6px}.panel-title{flex-wrap:wrap}.modal-actions{justify-content:stretch}.modal-actions button{flex:1}}
   </style>
   <script>
     if(new URLSearchParams(location.search).get("embed")==="1") document.documentElement.classList.add("embed-mode");
@@ -113,7 +132,14 @@
     <section class="panel">
       <div class="panel-title">
         <span>Historial de ingresos</span>
-        <span class="status" id="historyStatus">0 accesos</span>
+        <div class="panel-title-actions">
+          <span class="status" id="historyStatus">0 accesos</span>
+          <button class="danger-btn" id="deleteHistoryBtn" type="button">&#128465; Eliminar historial</button>
+        </div>
+      </div>
+      <div class="archive-banner" id="archiveBanner" hidden>
+        <span id="archiveBannerText"></span>
+        <button class="ghost small" id="archiveBackBtn" type="button">Volver a vista actual</button>
       </div>
       <div class="table-wrap">
         <table>
@@ -128,7 +154,41 @@
         </table>
       </div>
     </section>
+
+    <section class="panel archive-panel">
+      <div class="panel-title">
+        <span>Consulta hist&oacute;rica archivada</span>
+        <span class="status" id="archiveStatus">Sin archivos</span>
+      </div>
+      <div class="archive-controls">
+        <label>Mes archivado
+          <select id="archiveMonthSelect"><option value="">Selecciona un mes</option></select>
+        </label>
+        <button class="primary" id="archiveQueryBtn" type="button">Consultar</button>
+        <button class="ghost" id="archiveCsvBtn" type="button" disabled>Descargar CSV</button>
+      </div>
+      <p class="archive-hint">Los meses cerrados se archivan como JSON liviano en Drive y se retiran del historial en vivo para mantener el reporte r&aacute;pido.</p>
+    </section>
   </main>
+
+  <div class="modal-overlay" id="deleteModalOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Eliminar historial de accesos">
+      <h2>Eliminar historial de accesos</h2>
+      <p>Esta accion borra permanentemente el historial de accesos del reporte en vivo y limpia la copia local de este navegador. Si guardas, se crea un respaldo liviano (JSON) en Drive con el nombre que elijas.</p>
+      <label class="modal-label">Token de administrador
+        <input type="password" id="adminTokenInput" placeholder="Token requerido">
+      </label>
+      <label class="modal-label">Nombre del respaldo (solo si guardas)
+        <input type="text" id="backupFileNameInput" placeholder="Ej: respaldo_julio_2026">
+      </label>
+      <p class="modal-error" id="deleteModalError" hidden></p>
+      <div class="modal-actions">
+        <button class="ghost" id="cancelDeleteBtn" type="button">Cancelar</button>
+        <button class="ghost danger-outline" id="deleteWithoutSaveBtn" type="button">Eliminar sin guardar</button>
+        <button class="primary" id="saveAndDeleteBtn" type="button">Guardar y eliminar</button>
+      </div>
+    </div>
+  </div>
 
   <script>
     const ACCESS_API_URL = "https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec";
@@ -144,6 +204,8 @@
     let excludedRoleKeys = new Set();
     let sourceLabel = "local";
     let refreshTimer = null;
+    let archiveView = null;
+    const MONTH_NAMES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
     function parseDate(value){const d=new Date(value);return Number.isNaN(d.getTime())?null:d}
     function startOfDay(date){return new Date(date.getFullYear(),date.getMonth(),date.getDate())}
@@ -204,11 +266,11 @@
     function uniqueRoles(){const byKey=new Map();loginRoles.concat(rows.map(r=>String(r.role).trim())).filter(Boolean).forEach(role=>{const key=roleKey(role);if(key&&!byKey.has(key))byKey.set(key,role)});return [...byKey.values()].sort((a,b)=>a.localeCompare(b,"es"))}
     function controlledRoles(){return allRoles.filter(role=>!excludedRoleKeys.has(roleKey(role)))}
     function renderControlledRoles(){
+      allRoles=uniqueRoles();
+      excludedRoleKeys=readExcludedRoles();
       const box=$("controlledRoles");
       const status=$("controlledRolesStatus");
       if(!box||!status) return;
-      allRoles=uniqueRoles();
-      if(!excludedRoleKeys.size&&!localStorage.getItem(ROLE_EXCLUDED_KEY)) excludedRoleKeys=readExcludedRoles();
       box.innerHTML=allRoles.length?allRoles.map(role=>{
         const key=roleKey(role);
         const checked=!excludedRoleKeys.has(key);
@@ -240,7 +302,6 @@
     }
     async function render(){
       await loadRows();
-      if(!excludedRoleKeys.size&&!localStorage.getItem(ROLE_EXCLUDED_KEY)) excludedRoleKeys=readExcludedRoles();
       renderControlledRoles();
       syncRoleOptions();
       const now=new Date(), day=startOfDay(now), week=startOfWeek(now), month=startOfMonth(now);
@@ -267,9 +328,11 @@
       tableStatus.textContent=`${list.length} usuario(s) / ${view.length} acceso(s) - ${sourceLabel==="central"?"historial central en vivo":"historial local"}`;
       tableStatus.className=`status ${sourceLabel==="central"?"is-live":"is-local"}`;
 
-      const history=view.slice().sort((a,b)=>parseDate(b.at)-parseDate(a.at));
-      $("historyBody").innerHTML=history.length?history.map(row=>`<tr><td><span class="role">${escapeHtml(row.role)}</span></td><td class="user">${escapeHtml(row.user)}</td><td>${escapeHtml(fmt(row.at))}</td></tr>`).join(""):`<tr><td class="empty" colspan="3">No hay historial para los filtros seleccionados.</td></tr>`;
-      $("historyStatus").textContent=`${history.length} acceso(s)`;
+      if(!archiveView){
+        const history=view.slice().sort((a,b)=>parseDate(b.at)-parseDate(a.at));
+        $("historyBody").innerHTML=history.length?history.map(row=>`<tr><td><span class="role">${escapeHtml(row.role)}</span></td><td class="user">${escapeHtml(row.user)}</td><td>${escapeHtml(fmt(row.at))}</td></tr>`).join(""):`<tr><td class="empty" colspan="3">No hay historial para los filtros seleccionados.</td></tr>`;
+        $("historyStatus").textContent=`${history.length} acceso(s)`;
+      }
       fetchConnectedUsers().then((online)=>{
         lastConnectedUsers=Array.isArray(online.sessions)?online.sessions:[];
         tableStatus.innerHTML=`<button class="online-toggle" id="onlineToggle" type="button" aria-expanded="${onlineListOpen?"true":"false"}">${online.connected} usuario(s) conectado(s) de ${online.total}<span class="online-arrow">›</span></button>`;
@@ -286,13 +349,154 @@
       panel.classList.toggle("is-open", onlineListOpen);
       box.innerHTML=lastConnectedUsers.length?lastConnectedUsers.map(item=>`<div class="online-user"><strong>${escapeHtml(item.user)}</strong><span>${escapeHtml(item.role)} · ${escapeHtml(fmt(item.lastHeartbeat))}</span></div>`).join(""):`<div class="empty">No hay usuarios conectados en este momento.</div>`;
     }
+    async function callAccessApi(action,payload){
+      if(!ACCESS_API_URL) return {success:false,message:"Sin API"};
+      try{
+        const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},cache:"no-store",body:JSON.stringify({action,payload:payload||{}})});
+        const text=await response.text();
+        return JSON.parse(String(text||"{}"));
+      }catch(error){
+        return {success:false,message:"Sin conexion con el servidor."};
+      }
+    }
+    function monthLabel(key){
+      const parts=String(key||"").split("-");
+      const idx=Number(parts[1])-1;
+      return `${MONTH_NAMES[idx]||parts[1]} ${parts[0]}`;
+    }
+    function downloadCsv(filename,logRows){
+      const header=["Rol","Usuario","Fecha y hora"];
+      const lines=[header.join(",")].concat(logRows.map(row=>[row.role,row.user,fmt(row.at)].map(value=>`"${String(value??"").replace(/"/g,'""')}"`).join(",")));
+      const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement("a");
+      link.href=url;
+      link.download=filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+    async function loadArchivedMonths(){
+      const data=await callAccessApi("getArchivedMonths",{});
+      const select=$("archiveMonthSelect");
+      const months=data.success&&Array.isArray(data.months)?data.months:[];
+      const current=select.value;
+      select.innerHTML='<option value="">Selecciona un mes</option>'+months.map(m=>`<option value="${escapeHtml(m)}">${escapeHtml(monthLabel(m))}</option>`).join("");
+      select.value=months.includes(current)?current:"";
+      $("archiveStatus").textContent=months.length?`${months.length} mes(es) archivado(s)`:"Sin archivos";
+    }
+    function renderArchiveView(){
+      if(!archiveView) return;
+      const logRows=archiveView.logs.slice().sort((a,b)=>parseDate(b.at)-parseDate(a.at));
+      $("historyBody").innerHTML=logRows.length?logRows.map(row=>`<tr><td><span class="role">${escapeHtml(row.role)}</span></td><td class="user">${escapeHtml(row.user)}</td><td>${escapeHtml(fmt(row.at))}</td></tr>`).join(""):`<tr><td class="empty" colspan="3">Sin registros archivados en este mes.</td></tr>`;
+      $("historyStatus").textContent=`${logRows.length} acceso(s) archivados`;
+      $("archiveBanner").hidden=false;
+      $("archiveBannerText").textContent=`Mostrando archivo historico: ${monthLabel(archiveView.month)} (${logRows.length} acceso(s))`;
+      $("archiveCsvBtn").disabled=!logRows.length;
+    }
+    async function handleArchiveQuery(){
+      const month=$("archiveMonthSelect").value;
+      if(!month) return;
+      $("archiveQueryBtn").disabled=true;
+      try{
+        const data=await callAccessApi("getArchivedAccessLogs",{month});
+        if(!data.success){ alert(data.message||"No se pudo consultar el archivo."); return; }
+        archiveView={month,logs:Array.isArray(data.logs)?data.logs:[]};
+        renderArchiveView();
+      }finally{
+        $("archiveQueryBtn").disabled=false;
+      }
+    }
+    function exitArchiveView(){
+      archiveView=null;
+      $("archiveBanner").hidden=true;
+      $("archiveCsvBtn").disabled=true;
+      render();
+    }
+    function handleArchiveCsv(){
+      if(!archiveView||!archiveView.logs.length) return;
+      downloadCsv(`accesos_${archiveView.month}.csv`,archiveView.logs);
+    }
+    function suggestedBackupName(){
+      const now=new Date();
+      const pad=n=>String(n).padStart(2,"0");
+      return `respaldo_manual_${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+    }
+    function openDeleteModal(){
+      $("adminTokenInput").value="";
+      $("backupFileNameInput").value=suggestedBackupName();
+      $("deleteModalError").hidden=true;
+      $("deleteModalOverlay").hidden=false;
+      $("adminTokenInput").focus();
+    }
+    function closeDeleteModal(){
+      $("deleteModalOverlay").hidden=true;
+    }
+    function showModalError(message){
+      const el=$("deleteModalError");
+      el.textContent=message;
+      el.hidden=false;
+    }
+    function setModalBusy(isBusy){
+      $("saveAndDeleteBtn").disabled=isBusy;
+      $("deleteWithoutSaveBtn").disabled=isBusy;
+      $("cancelDeleteBtn").disabled=isBusy;
+    }
+    function clearLocalAccessCache(){
+      try{
+        localStorage.removeItem(LOG_KEY);
+        localStorage.removeItem("opaustro_access_log_pending");
+      }catch(_){}
+    }
+    async function finishDeletion(){
+      clearLocalAccessCache();
+      closeDeleteModal();
+      archiveView=null;
+      $("archiveBanner").hidden=true;
+      rows=[];
+      await loadArchivedMonths();
+      await render();
+    }
+    async function handleSaveAndDelete(){
+      const token=$("adminTokenInput").value.trim();
+      const fileName=$("backupFileNameInput").value.trim();
+      if(!token){ showModalError("Ingresa el token de administrador."); return; }
+      if(!fileName){ showModalError("Ingresa un nombre para el respaldo."); return; }
+      setModalBusy(true);
+      const backup=await callAccessApi("exportAccessLogsBackup",{token,fileName});
+      if(!backup.success){ setModalBusy(false); showModalError(backup.message||"No se pudo respaldar el historial. Verifica el token."); return; }
+      const clear=await callAccessApi("clearAccessLogs",{token});
+      setModalBusy(false);
+      if(!clear.success){ showModalError(clear.message||"Se respaldo el historial pero no se pudo eliminar."); return; }
+      await finishDeletion();
+    }
+    async function handleDeleteWithoutSave(){
+      const token=$("adminTokenInput").value.trim();
+      if(!token){ showModalError("Ingresa el token de administrador."); return; }
+      if(!confirm("Esto eliminara el historial sin guardar una copia. ¿Continuar?")) return;
+      setModalBusy(true);
+      const clear=await callAccessApi("clearAccessLogs",{token});
+      setModalBusy(false);
+      if(!clear.success){ showModalError(clear.message||"No se pudo eliminar. Verifica el token."); return; }
+      await finishDeletion();
+    }
     $("filterForm").addEventListener("submit",e=>{e.preventDefault();render()});
     $("roleFilter").addEventListener("change",render);
     $("dateFilter").addEventListener("change",render);
     $("refreshBtn").addEventListener("click",render);
+    $("deleteHistoryBtn").addEventListener("click",openDeleteModal);
+    $("cancelDeleteBtn").addEventListener("click",closeDeleteModal);
+    $("saveAndDeleteBtn").addEventListener("click",handleSaveAndDelete);
+    $("deleteWithoutSaveBtn").addEventListener("click",handleDeleteWithoutSave);
+    $("deleteModalOverlay").addEventListener("click",e=>{ if(e.target.id==="deleteModalOverlay") closeDeleteModal(); });
+    $("archiveQueryBtn").addEventListener("click",handleArchiveQuery);
+    $("archiveBackBtn").addEventListener("click",exitArchiveView);
+    $("archiveCsvBtn").addEventListener("click",handleArchiveCsv);
     window.addEventListener("storage",event=>{if(event.key===LOG_KEY)render()});
     window.addEventListener("focus",render);
     refreshTimer=setInterval(render,30000);
+    loadArchivedMonths();
     render();
   </script>
 </body>
