@@ -264,7 +264,6 @@ function recordAccessLog(payload) {
     const user = String(payload.user || payload.usuario || '').trim();
     const role = String(payload.role || payload.rol || '').trim();
     if (!user || !role) return { success: false, message: 'Registro incompleto.' };
-    if (isAdminRole_(role)) return { success: true, ignored: true };
 
     const at = payload.at ? new Date(payload.at) : new Date();
     const safeDate = Number.isNaN(at.getTime()) ? new Date() : at;
@@ -312,7 +311,7 @@ function getAccessLogs(payload) {
           device: String(row[deviceIndex] || '').trim()
         };
       })
-      .filter((row) => row.user && row.role && row.at && !isAdminRole_(row.role))
+      .filter((row) => row.user && row.role && row.at)
       .sort((a, b) => new Date(b.at) - new Date(a.at))
       .slice(0, limit);
     return { success: true, logs };

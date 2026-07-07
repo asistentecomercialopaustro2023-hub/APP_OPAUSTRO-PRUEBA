@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob: https://script.google.com https://script.googleusercontent.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';">
   <title>Control de acceso</title>
   <style>
     :root{--bg:#eef4f8;--panel:#fff;--line:#d8e5ee;--text:#062b49;--muted:#61758a;--brand:#076897;--brand2:#0b7db2;--ok:#0b8f61;--soft:#f7fbfe;--shadow:0 18px 40px rgba(6,43,73,.08)}
@@ -34,6 +34,8 @@
     .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:18px}
     .panel-title{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:15px 16px;border-bottom:1px solid var(--line);font-weight:900;background:linear-gradient(180deg,#fff,var(--soft))}
     .status{font-size:13px;color:var(--muted);font-weight:700}
+    .status.is-live{color:var(--ok)}
+    .status.is-local{color:#b45309}
     .table-wrap{overflow:auto}
     table{width:100%;border-collapse:collapse;min-width:760px}
     th,td{padding:13px 14px;border-bottom:1px solid #e5edf3;text-align:left;vertical-align:top}
@@ -124,6 +126,7 @@
     const $ = id => document.getElementById(id);
     let rows = [];
     let sourceLabel = "local";
+    let refreshTimer = null;
 
     function parseDate(value){const d=new Date(value);return Number.isNaN(d.getTime())?null:d}
     function startOfDay(date){return new Date(date.getFullYear(),date.getMonth(),date.getDate())}
@@ -131,15 +134,14 @@
     function startOfMonth(date){return new Date(date.getFullYear(),date.getMonth(),1)}
     function fmt(value){const d=parseDate(value);return d?d.toLocaleString("es-EC",{dateStyle:"short",timeStyle:"short"}):""}
     function norm(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim()}
-    function isAdminRole(role){const value=norm(role);return value==="ADMIN"||value==="ADMINISTRADOR"}
-    function localRows(){try{return JSON.parse(localStorage.getItem(LOG_KEY)||"[]").filter(r=>r&&r.user&&r.role&&r.at&&!isAdminRole(r.role))}catch(_){return []}}
+    function localRows(){try{return JSON.parse(localStorage.getItem(LOG_KEY)||"[]").filter(r=>r&&r.user&&r.role&&r.at)}catch(_){return []}}
     async function fetchCentralRows(){
       if(!ACCESS_API_URL) throw new Error("Sin API");
       const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"getAccessLogs",payload:{limit:5000}})});
       const text=await response.text();
       const data=JSON.parse(String(text||"{}"));
       if(!data.success||!Array.isArray(data.logs)) throw new Error(data.message||"Sin historial central");
-      return data.logs.filter(r=>r&&r.user&&r.role&&r.at&&!isAdminRole(r.role));
+      return data.logs.filter(r=>r&&r.user&&r.role&&r.at);
     }
     function mergeRows(primary, secondary){
       const seen=new Set();
@@ -150,7 +152,15 @@
         return true;
       });
     }
-    async function loadRows(){try{rows=mergeRows(await fetchCentralRows(),localRows());sourceLabel="central"}catch(_){rows=localRows();sourceLabel="local"}}
+    async function loadRows(){
+      try{
+        rows=mergeRows(await fetchCentralRows(),localRows());
+        sourceLabel="central";
+      }catch(_){
+        rows=localRows();
+        sourceLabel="local";
+      }
+    }
     function uniqueRoles(){return [...new Set(rows.map(r=>String(r.role).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"))}
     function syncRoleOptions(){const current=$("roleFilter").value;$("roleFilter").innerHTML='<option value="">Todos los roles</option>'+uniqueRoles().map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join("");$("roleFilter").value=current}
     function escapeHtml(value){return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
@@ -186,7 +196,9 @@
       });
       const list=[...grouped.values()].sort((a,b)=>parseDate(b.last)-parseDate(a.last));
       $("accessBody").innerHTML=list.length?list.map(item=>`<tr><td class="user">${escapeHtml(item.user)}</td><td><span class="role">${escapeHtml(item.role)}</span></td><td>${item.day}</td><td>${item.week}</td><td>${item.month}</td><td>${item.total}</td><td>${escapeHtml(fmt(item.last))}</td></tr>`).join(""):`<tr><td class="empty" colspan="7">A&uacute;n no hay accesos registrados en este navegador.</td></tr>`;
-      $('tableStatus').textContent=`${list.length} usuario(s) / ${view.length} acceso(s) - ${sourceLabel==="central"?"historial central":"historial local"}`;
+      const tableStatus=$("tableStatus");
+      tableStatus.textContent=`${list.length} usuario(s) / ${view.length} acceso(s) - ${sourceLabel==="central"?"historial central en vivo":"historial local"}`;
+      tableStatus.className=`status ${sourceLabel==="central"?"is-live":"is-local"}`;
 
       const history=view.slice().sort((a,b)=>parseDate(b.at)-parseDate(a.at));
       $("historyBody").innerHTML=history.length?history.map(row=>`<tr><td><span class="role">${escapeHtml(row.role)}</span></td><td class="user">${escapeHtml(row.user)}</td><td>${escapeHtml(fmt(row.at))}</td></tr>`).join(""):`<tr><td class="empty" colspan="3">No hay historial para los filtros seleccionados.</td></tr>`;
@@ -197,6 +209,8 @@
     $("dateFilter").addEventListener("change",render);
     $("refreshBtn").addEventListener("click",render);
     window.addEventListener("storage",event=>{if(event.key===LOG_KEY)render()});
+    window.addEventListener("focus",render);
+    refreshTimer=setInterval(render,30000);
     render();
   </script>
 </body>

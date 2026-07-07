@@ -1,17 +1,16 @@
 ﻿{
   "app": "OPAUSTRO",
-  "version": "1.3.0",
-  "label": "OPAUSTRO v1.3",
+  "version": "1.3.1",
+  "label": "OPAUSTRO v1.3.1",
   "channel": "prueba",
-  "publishedAt": "2026-07-03",
+  "publishedAt": "2026-07-07",
   "notes": [
-    "Control de acceso mejora su interfaz visual y mueve la sincronizacion junto a la busqueda.",
-    "La barra lateral mantiene scroll interno invisible sin afectar el contenido.",
-    "Se agrega BI Vendedor al modulo de ventas y a la precarga de actualizacion.",
-    "Tablero Control y Revision Costo muestran errores 404 limpios cuando falta el archivo local.",
-    "Se mantiene el control UTF-8 para evitar distorsion de tildes y caracteres especiales."
+    "Hotfix: Control de acceso consulta historial central de Apps Script en todos los dispositivos.",
+    "Hotfix: Control de acceso refresca automaticamente y no se limita al almacenamiento local del navegador.",
+    "Hotfix: Login reintenta enviar accesos pendientes para evitar perdida de registros por red o cierre de app.",
+    "Hotfix: El historial de accesos permite registrar todos los roles."
   ],
-  "releaseKey": "1.3",
+  "releaseKey": "1.3.1",
   "forceUpdate": false,
   "rollback": false
 }
