@@ -28,6 +28,14 @@
     .sync-action{display:grid;justify-items:center;gap:4px;align-self:end}
     .sync-action button{width:44px;height:44px;display:grid;place-items:center;padding:0;border-radius:12px;background:#fff;color:var(--brand);border:1px solid #c7d8e4;box-shadow:0 8px 20px rgba(6,43,73,.07);font-size:18px}
     .sync-action small{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+    .role-control{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:18px;box-shadow:0 10px 28px rgba(6,43,73,.05)}
+    .role-control-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .role-control-title{font-weight:900;color:var(--text)}
+    .role-control-note{font-size:12px;color:var(--muted);font-weight:700}
+    .role-chips{display:flex;flex-wrap:wrap;gap:8px}
+    .role-chip{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:7px 11px;border:1px solid #c7d8e4;border-radius:999px;background:#f8fcff;color:#36546a;font-size:13px;font-weight:800;text-transform:none;letter-spacing:0;cursor:pointer;user-select:none}
+    .role-chip input{width:15px;height:15px;margin:0;accent-color:var(--brand)}
+    .role-chip:has(input:checked){border-color:#9ed4ec;background:#e7f5fb;color:#075f9b}
     label{display:grid;gap:6px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
     input,select{width:100%;border:1px solid #c7d8e4;border-radius:10px;padding:12px 13px;font-size:15px;color:var(--text);background:#fff;outline:none}
     input:focus,select:focus{border-color:var(--brand2);box-shadow:0 0 0 3px rgba(11,125,178,.12)}
@@ -45,7 +53,7 @@
     .user{font-weight:900;color:#05365a}.role{display:inline-flex;border-radius:999px;background:#e7f3fa;color:#075f9b;padding:4px 9px;font-size:12px;font-weight:900}
     .empty{padding:34px;text-align:center;color:var(--muted)}
     html.embed-mode body{padding:22px}
-    @media(max-width:760px){body{padding:16px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr}.sync-action{justify-items:start}.metric strong{font-size:26px}}
+    @media(max-width:760px){body{padding:16px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr}.sync-action{justify-items:start}.metric strong{font-size:26px}.role-control-head{display:block}.role-control-note{margin-top:6px}}
   </style>
   <script>
     if(new URLSearchParams(location.search).get("embed")==="1") document.documentElement.classList.add("embed-mode");
@@ -53,6 +61,14 @@
 </head>
 <body>
   <main class="wrap">
+    <section class="role-control" aria-label="Roles a controlar">
+      <div class="role-control-head">
+        <span class="role-control-title">Roles a controlar</span>
+        <span class="role-control-note" id="controlledRolesStatus">Cargando roles...</span>
+      </div>
+      <div class="role-chips" id="controlledRoles"></div>
+    </section>
+
     <form class="filters" id="filterForm">
       <label>Usuario
         <input id="userFilter" placeholder="Buscar por usuario">
@@ -91,7 +107,7 @@
               <th>Hoy</th>
               <th>Semana</th>
               <th>Mes</th>
-              <th>Total local</th>
+              <th>Total</th>
               <th>&Uacute;ltimo ingreso</th>
             </tr>
           </thead>
@@ -123,8 +139,13 @@
   <script>
     const ACCESS_API_URL = "https://script.google.com/macros/s/AKfycbzRNrW_u40cu_ltRoJtECZETcIQfDd6y71mvIi0tjI3q5PVR2oTuXK_fy8MpDB10snauQ/exec";
     const LOG_KEY = "opaustro_access_log";
+    const ROLE_EXCLUDED_KEY = "opaustro_access_roles_excluded";
+    const DEFAULT_EXCLUDED_ROLE_KEYS = new Set(["ADMIN", "ADMINISTRADOR", "GERENCIA", "GERENTE"]);
     const $ = id => document.getElementById(id);
     let rows = [];
+    let loginRoles = [];
+    let allRoles = [];
+    let excludedRoleKeys = new Set();
     let sourceLabel = "local";
     let refreshTimer = null;
 
@@ -134,7 +155,18 @@
     function startOfMonth(date){return new Date(date.getFullYear(),date.getMonth(),1)}
     function fmt(value){const d=parseDate(value);return d?d.toLocaleString("es-EC",{dateStyle:"short",timeStyle:"short"}):""}
     function norm(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().trim()}
+    function roleKey(value){return norm(value)}
+    function readExcludedRoles(){try{const raw=JSON.parse(localStorage.getItem(ROLE_EXCLUDED_KEY)||"null");return Array.isArray(raw)?new Set(raw.map(roleKey)):new Set(DEFAULT_EXCLUDED_ROLE_KEYS)}catch(_){return new Set(DEFAULT_EXCLUDED_ROLE_KEYS)}}
+    function writeExcludedRoles(){try{localStorage.setItem(ROLE_EXCLUDED_KEY,JSON.stringify([...excludedRoleKeys]))}catch(_){}}
     function localRows(){try{return JSON.parse(localStorage.getItem(LOG_KEY)||"[]").filter(r=>r&&r.user&&r.role&&r.at)}catch(_){return []}}
+    async function fetchLoginRoles(){
+      if(!ACCESS_API_URL) return [];
+      const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},cache:"no-store",body:JSON.stringify({action:"getLoginData",payload:{}})});
+      const text=await response.text();
+      const data=JSON.parse(String(text||"{}"));
+      if(!data.success||!data.usersByRole) return [];
+      return Object.keys(data.usersByRole).filter(Boolean);
+    }
     async function fetchCentralRows(){
       if(!ACCESS_API_URL) throw new Error("Sin API");
       const response=await fetch(ACCESS_API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"getAccessLogs",payload:{limit:5000}})});
@@ -154,15 +186,42 @@
     }
     async function loadRows(){
       try{
-        rows=mergeRows(await fetchCentralRows(),localRows());
-        sourceLabel="central";
+        const result=await Promise.allSettled([fetchCentralRows(),fetchLoginRoles()]);
+        const centralOk=result[0].status==="fulfilled";
+        const central=centralOk?result[0].value:[];
+        loginRoles=result[1].status==="fulfilled"?result[1].value:loginRoles;
+        rows=mergeRows(central,localRows());
+        sourceLabel=centralOk?"central":"local";
       }catch(_){
         rows=localRows();
         sourceLabel="local";
       }
     }
-    function uniqueRoles(){return [...new Set(rows.map(r=>String(r.role).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"))}
-    function syncRoleOptions(){const current=$("roleFilter").value;$("roleFilter").innerHTML='<option value="">Todos los roles</option>'+uniqueRoles().map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join("");$("roleFilter").value=current}
+    function uniqueRoles(){const byKey=new Map();loginRoles.concat(rows.map(r=>String(r.role).trim())).filter(Boolean).forEach(role=>{const key=roleKey(role);if(key&&!byKey.has(key))byKey.set(key,role)});return [...byKey.values()].sort((a,b)=>a.localeCompare(b,"es"))}
+    function controlledRoles(){return allRoles.filter(role=>!excludedRoleKeys.has(roleKey(role)))}
+    function renderControlledRoles(){
+      const box=$("controlledRoles");
+      const status=$("controlledRolesStatus");
+      allRoles=uniqueRoles();
+      if(!excludedRoleKeys.size&&!localStorage.getItem(ROLE_EXCLUDED_KEY)) excludedRoleKeys=readExcludedRoles();
+      box.innerHTML=allRoles.length?allRoles.map(role=>{
+        const key=roleKey(role);
+        const checked=!excludedRoleKeys.has(key);
+        return `<label class="role-chip"><input type="checkbox" value="${escapeHtml(key)}" ${checked?"checked":""}><span>${escapeHtml(role)}</span></label>`;
+      }).join(""):`<span class="role-control-note">No se encontraron roles configurados.</span>`;
+      status.textContent=`${controlledRoles().length} de ${allRoles.length} rol(es) activos`;
+      box.querySelectorAll("input[type='checkbox']").forEach(input=>{
+        input.addEventListener("change",()=>{
+          if(input.checked) excludedRoleKeys.delete(input.value);
+          else excludedRoleKeys.add(input.value);
+          writeExcludedRoles();
+          renderControlledRoles();
+          syncRoleOptions();
+          render();
+        });
+      });
+    }
+    function syncRoleOptions(){const current=$("roleFilter").value;const roles=controlledRoles();$("roleFilter").innerHTML='<option value="">Todos los roles controlados</option>'+roles.map(r=>`<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join("");$("roleFilter").value=roles.some(r=>norm(r)===norm(current))?current:""}
     function escapeHtml(value){return String(value??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c]))}
     function inRange(row,start){const d=parseDate(row.at);return d&&d>=start}
     function dateKey(date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`}
@@ -171,10 +230,13 @@
       const q=norm($("userFilter").value);
       const role=norm($("roleFilter").value);
       const date=$("dateFilter").value;
-      return rows.filter(row=>(!q||norm(row.user).includes(q))&&(!role||norm(row.role)===role)&&(!date||sameDate(row,date)));
+      const controlled=new Set(controlledRoles().map(roleKey));
+      return rows.filter(row=>controlled.has(roleKey(row.role))&&(!q||norm(row.user).includes(q))&&(!role||norm(row.role)===role)&&(!date||sameDate(row,date)));
     }
     async function render(){
       await loadRows();
+      if(!excludedRoleKeys.size&&!localStorage.getItem(ROLE_EXCLUDED_KEY)) excludedRoleKeys=readExcludedRoles();
+      renderControlledRoles();
       syncRoleOptions();
       const now=new Date(), day=startOfDay(now), week=startOfWeek(now), month=startOfMonth(now);
       const view=filteredRows();
@@ -195,7 +257,7 @@
         if(!item.last||parseDate(row.at)>parseDate(item.last)) item.last=row.at;
       });
       const list=[...grouped.values()].sort((a,b)=>parseDate(b.last)-parseDate(a.last));
-      $("accessBody").innerHTML=list.length?list.map(item=>`<tr><td class="user">${escapeHtml(item.user)}</td><td><span class="role">${escapeHtml(item.role)}</span></td><td>${item.day}</td><td>${item.week}</td><td>${item.month}</td><td>${item.total}</td><td>${escapeHtml(fmt(item.last))}</td></tr>`).join(""):`<tr><td class="empty" colspan="7">A&uacute;n no hay accesos registrados en este navegador.</td></tr>`;
+      $("accessBody").innerHTML=list.length?list.map(item=>`<tr><td class="user">${escapeHtml(item.user)}</td><td><span class="role">${escapeHtml(item.role)}</span></td><td>${item.day}</td><td>${item.week}</td><td>${item.month}</td><td>${item.total}</td><td>${escapeHtml(fmt(item.last))}</td></tr>`).join(""):`<tr><td class="empty" colspan="7">No hay accesos registrados para los roles y filtros seleccionados.</td></tr>`;
       const tableStatus=$("tableStatus");
       tableStatus.textContent=`${list.length} usuario(s) / ${view.length} acceso(s) - ${sourceLabel==="central"?"historial central en vivo":"historial local"}`;
       tableStatus.className=`status ${sourceLabel==="central"?"is-live":"is-local"}`;

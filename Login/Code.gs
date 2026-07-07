@@ -28,6 +28,7 @@ function doGet(e) {
     const action = e && e.parameter && e.parameter.action;
     if (action === 'getLoginData') return json_(getLoginData());
     if (action === 'getAccessLogs') return json_(getAccessLogs({}));
+    if (action === 'clearAccessLogs') return json_(clearAccessLogs({ token: e.parameter.token || '' }));
     if (action === 'diagnostico') return json_(diagnosticarLogin());
 
     return json_({
@@ -48,6 +49,7 @@ function doPost(e) {
     if (body.action === 'authenticate') return json_(authenticate(body.payload || {}));
     if (body.action === 'recordAccessLog') return json_(recordAccessLog(body.payload || {}));
     if (body.action === 'getAccessLogs') return json_(getAccessLogs(body.payload || {}));
+    if (body.action === 'clearAccessLogs') return json_(clearAccessLogs(body.payload || {}));
     if (body.action === 'diagnostico') return json_(diagnosticarLogin());
     return json_({ success: false, message: 'Solicitud no valida.' });
   } catch (error) {
@@ -318,6 +320,22 @@ function getAccessLogs(payload) {
   } catch (error) {
     console.error(error);
     return { success: false, message: 'No se pudo consultar el historial de accesos.' };
+  }
+}
+
+function clearAccessLogs(payload) {
+  try {
+    const token = String(payload.token || '').trim();
+    const expectedToken = String(PropertiesService.getScriptProperties().getProperty('OPAUSTRO_ADMIN_TOKEN') || '').trim();
+    if (!expectedToken || token !== expectedToken) return { success: false, message: 'No autorizado.' };
+
+    const sheet = accessLogSheet_();
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) sheet.deleteRows(2, lastRow - 1);
+    return { success: true, message: 'Historial de accesos limpiado.', logs: [] };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: 'No se pudo limpiar el historial.' };
   }
 }
 
