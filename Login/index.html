@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Permissions-Policy" content="camera=(self), geolocation=(self), microphone=(), payment=(), usb=(), bluetooth=()">
   <meta http-equiv="Content-Security-Policy" content="default-src &#39;self&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://app.powerbi.com https://cdnjs.cloudflare.com data: blob:; script-src &#39;self&#39; &#39;unsafe-inline&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://cdnjs.cloudflare.com; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data: https:; connect-src &#39;self&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://app.powerbi.com https://cdnjs.cloudflare.com; frame-src &#39;self&#39; https://app.powerbi.com https://docs.google.com; object-src &#39;none&#39;; base-uri &#39;self&#39;; form-action &#39;self&#39;; upgrade-insecure-requests;">
@@ -517,6 +517,8 @@
       padding: 0;
       text-align: left;
       background: #fff;
+      overflow: auto;
+      position: relative;
     }
 
     .module-frame {
@@ -526,6 +528,7 @@
       border: 0;
       display: block;
       background: #fff;
+      transform-origin: top left;
     }
 
     .blank-panel p {
@@ -536,6 +539,54 @@
 
     .bottom-nav {
       display: none;
+    }
+
+    .content-zoom-float {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 25;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #fff;
+      border: 1px solid #c7d8e4;
+      border-radius: 999px;
+      padding: 5px;
+      box-shadow: 0 10px 26px rgba(6, 43, 73, .18);
+    }
+
+    .content-zoom-float[hidden] {
+      display: none;
+    }
+
+    .content-zoom-float button {
+      min-width: 36px;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 999px;
+      border: 0;
+      background: transparent;
+      color: #12324a;
+      font-weight: 900;
+      font-size: .85rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .content-zoom-float button:hover {
+      background: #eef6fb;
+    }
+
+    .content-zoom-float button:disabled {
+      opacity: .35;
+      cursor: default;
+    }
+
+    #zoomResetBtn {
+      min-width: 48px;
+      color: #506b80;
+      font-weight: 800;
     }
 
 
@@ -826,6 +877,11 @@
         background: rgba(255, 255, 255, .96);
         border-top: 1px solid #d7e1e8;
         z-index: 10;
+      }
+
+      .content-zoom-float {
+        bottom: calc(76px + env(safe-area-inset-bottom));
+        right: 12px;
       }
 
       .bottom-nav .module-link {
@@ -1707,6 +1763,11 @@
         <section class="blank-panel" id="blankPanel">
           <p>Seleccione un m&oacute;dulo para continuar.</p>
         </section>
+        <div class="content-zoom-float" id="contentZoomFloat" hidden aria-label="Zoom del contenido">
+          <button type="button" id="zoomOutBtn" title="Reducir zoom" aria-label="Reducir zoom">&#8722;</button>
+          <button type="button" id="zoomResetBtn" title="Restablecer zoom" aria-label="Restablecer zoom">100%</button>
+          <button type="button" id="zoomInBtn" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
+        </div>
       </main>
     </div>
 
@@ -1725,9 +1786,9 @@
     const SESSION_KEY = 'opaustro_session';
     const ACTIVE_MODULE_KEY = 'opaustro_active_module';
     const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
-    const APP_VERSION = '1.4.2';
-    const APP_RELEASE = 'OPAUSTRO v1.4.2';
-    const APP_RELEASE_KEY = '1.4.2';
+    const APP_VERSION = '1.4.3';
+    const APP_RELEASE = 'OPAUSTRO v1.4.3';
+    const APP_RELEASE_KEY = '1.4.3';
     const RELEASE_KEY = 'opaustro_release_version';
     let inactivityTimer = null;
     let heartbeatTimer = null;
@@ -1888,7 +1949,11 @@
       location.replace(target);
     }
 
+    let updateCheckInFlight = false;
     async function checkReleaseVersion() {
+      if (state.currentSession) return; // No interrumpir una sesion activa: se revisa al salir o cerrar sesion.
+      if (updateCheckInFlight) return;
+      updateCheckInFlight = true;
       try {
         const response = await fetch("../VERSION.json?v=" + Date.now(), { cache: "no-store" });
         if (!response.ok) return;
@@ -1897,12 +1962,15 @@
         const releaseKey = releaseKeyOf(release, current);
         const stored = readStored(RELEASE_KEY);
         const forced = release && (release.forceUpdate === true || release.rollback === true);
-        if (stored && (stored !== releaseKey || forced)) {
+        if (stored && (stored !== releaseKey || forced) && !document.querySelector(".update-overlay")) {
           showUpdatePrompt(release, current, releaseKey, !isInstalledApp());
           return;
         }
         writeStored(RELEASE_KEY, releaseKey);
-      } catch (error) {}
+      } catch (error) {
+      } finally {
+        updateCheckInFlight = false;
+      }
     }
 
     const MODULE_DEFINITIONS = {
@@ -2825,6 +2893,7 @@
         panel.innerHTML = `<iframe class="module-frame" src="${src}" title="${module.label}" loading="eager"></iframe>`;
         const frame = panel.querySelector("iframe");
         if (frame) {
+          applyContentZoom();
           frame.addEventListener("load", () => setTimeout(() => {
             if (readStored(ACTIVE_MODULE_KEY) === moduleName) setConnectionStatus("ok", "Conectado");
             applyResponsiveMode();
@@ -2836,9 +2905,44 @@
         panel.innerHTML = `<p>El módulo ${module.label} está listo para recibir su contenido.</p>`;
         setConnectionStatus("warn", "Sin base de datos");
       }
+      updateContentZoomVisibility();
       $("#appScreen").classList.remove("sidebar-open");
       if (pushHistory) history.pushState({ moduleName }, "", "#" + encodeURIComponent(moduleName));
       resetIdleTimer();
+    }
+
+    const CONTENT_ZOOM_KEY = "opaustro_content_zoom";
+    const CONTENT_ZOOM_MIN = 0.6;
+    const CONTENT_ZOOM_MAX = 2;
+    const CONTENT_ZOOM_STEP = 0.1;
+    let contentZoom = Number(readStored(CONTENT_ZOOM_KEY)) || 1;
+    if (Number.isNaN(contentZoom) || contentZoom < CONTENT_ZOOM_MIN || contentZoom > CONTENT_ZOOM_MAX) contentZoom = 1;
+
+    function applyContentZoom() {
+      const frame = $("#blankPanel .module-frame");
+      const resetBtn = $("#zoomResetBtn");
+      if (resetBtn) resetBtn.textContent = Math.round(contentZoom * 100) + "%";
+      const outBtn = $("#zoomOutBtn");
+      const inBtn = $("#zoomInBtn");
+      if (outBtn) outBtn.disabled = contentZoom <= CONTENT_ZOOM_MIN + 0.001;
+      if (inBtn) inBtn.disabled = contentZoom >= CONTENT_ZOOM_MAX - 0.001;
+      if (!frame) return;
+      frame.style.transform = `scale(${contentZoom})`;
+      frame.style.width = (100 / contentZoom) + "%";
+      frame.style.height = (100 / contentZoom) + "%";
+    }
+
+    function setContentZoom(value) {
+      contentZoom = Math.max(CONTENT_ZOOM_MIN, Math.min(CONTENT_ZOOM_MAX, value));
+      writeStored(CONTENT_ZOOM_KEY, String(contentZoom));
+      applyContentZoom();
+    }
+
+    function updateContentZoomVisibility() {
+      const float = $("#contentZoomFloat");
+      if (!float) return;
+      const hasFrame = !!$("#blankPanel .module-frame");
+      float.hidden = !hasFrame;
     }
 
     function persistSession(session) {
@@ -2890,6 +2994,7 @@
       $("#password").type = "password";
       $("#togglePassword").textContent = "Ver";
       history.replaceState({}, "", location.pathname);
+      checkReleaseVersion();
     }
 
     roleSelect.addEventListener("change", () => {
@@ -2937,6 +3042,10 @@
     });
     window.addEventListener("online", flushAccessLogQueue);
     window.addEventListener("focus", flushAccessLogQueue);
+    window.addEventListener("focus", checkReleaseVersion);
+    $("#zoomOutBtn").addEventListener("click", () => setContentZoom(contentZoom - CONTENT_ZOOM_STEP));
+    $("#zoomInBtn").addEventListener("click", () => setContentZoom(contentZoom + CONTENT_ZOOM_STEP));
+    $("#zoomResetBtn").addEventListener("click", () => setContentZoom(1));
     window.addEventListener("beforeunload", () => {
       if (state.currentSession && state.currentSession.sessionId) {
         postSessionAction("endSession", { sessionId: state.currentSession.sessionId });

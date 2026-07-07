@@ -1,5 +1,12 @@
 ﻿# Changelog OPAUSTRO
 
+## OPAUSTRO v1.4.3 - 2026-07-07
+
+- Corregido: la deteccion de nueva version ya no se ejecuta mientras hay una sesion activa (web o app instalada); ahora espera a que el usuario cierre sesion o a que la sesion expire por inactividad antes de mostrar el aviso de actualizacion.
+- Se agrego revision de version tambien al recuperar el foco en la pantalla de login, para detectar actualizaciones publicadas mientras la pestana estaba abierta sin sesion.
+- Nuevo: control de zoom (-, %, +) para el contenido de los modulos, ubicado como boton flotante. Escala unicamente el iframe del modulo activo; el encabezado, la barra lateral y el menu inferior permanecen fijos y no se ven afectados.
+- Se bloqueo el zoom nativo de pagina completa (pellizco/zoom del navegador) para evitar que escale el encabezado y los menus junto con el contenido.
+
 ## OPAUSTRO v1.4.2 - 2026-07-07
 
 - Separacion de entornos: el historial de accesos (eliminar/respaldar) usa una hoja de calculo distinta cuando se prueba en local, para no afectar los datos publicados. Borrar desde el sitio publicado tambien reinicia el sandbox local.
