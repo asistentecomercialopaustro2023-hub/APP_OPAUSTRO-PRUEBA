@@ -9,6 +9,9 @@
 - Actualizacion: en movil se oculta el control de zoom con botones y se habilita el pellizco tactil nativo para ampliar solo el contenido del modulo; el encabezado y la barra inferior de menus se mantienen fijos usando la Visual Viewport API. En escritorio se conservan los botones de zoom sin cambios.
 - Actualizacion: corregida la altura inconsistente de la barra inferior de menus en movil (habia 6 reglas CSS distintas segun el dispositivo); ahora es de 64px fijos en todos los celulares.
 - Actualizacion: al hacer zoom con el gesto tactil en movil, ahora se puede desplazar (scroll) dentro del contenido ampliado para recorrerlo; fuera del zoom se mantiene el comportamiento normal sin scroll doble.
+- Actualizacion: encabezado movil mas compacto (56px en vez de hasta 86px) e iconos/letras mas pequenos en la barra inferior de menus.
+- Actualizacion: eliminado el control de zoom con botones (+/-/100%) tanto en movil como en escritorio; en movil el zoom se hace con el gesto tactil, y se corrigio para que el scroll del contenido funcione de forma confiable sin depender de detectar el nivel de zoom.
+- Eliminados en Logistica los botones internos "Portal" y "Salir" (redundantes, ya que la navegacion y el cierre de sesion los maneja el menu principal).
 
 ## OPAUSTRO v1.4.3 - 2026-07-07
 
