@@ -1716,6 +1716,16 @@
       display: none !important;
     }
 
+    /* Mientras el usuario tiene el contenido ampliado con el gesto tactil, se
+       habilita el desplazamiento dentro del contenido para poder recorrerlo.
+       Fuera de ese momento se mantiene el comportamiento original (el iframe
+       maneja su propio scroll interno, sin scroll doble en el contenedor). */
+    .app-screen.is-mobile-layout.is-zoomed-in .module-workspace,
+    .app-screen.is-mobile-layout.is-zoomed-in .blank-panel.module-host {
+      overflow: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
   </style>
 </head>
 <body>
@@ -2776,11 +2786,13 @@
       if (!window.visualViewport) return;
       const vv = window.visualViewport;
       function update() {
-        if (!$("#appScreen") || !$("#appScreen").classList.contains("is-mobile-layout")) return;
+        const app = $("#appScreen");
+        if (!app || !app.classList.contains("is-mobile-layout")) return;
         const scale = vv.scale || 1;
         const header = document.querySelector(".app-topbar");
         const bottomNav = document.querySelector(".bottom-nav");
         const inverse = scale > 1.001 ? 1 / scale : 1;
+        app.classList.toggle("is-zoomed-in", scale > 1.001);
         if (header) {
           header.style.transform = inverse === 1 ? "" : `translate(${vv.offsetLeft}px, ${vv.offsetTop}px) scale(${inverse})`;
           header.style.transformOrigin = "top left";

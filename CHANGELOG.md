@@ -8,6 +8,7 @@
 - Hotfix: `forceUpdate:true` volvia a mostrar el aviso de actualizacion en bucle infinito aunque ya se estuviera en la ultima version. Ahora el aviso solo aparece cuando realmente hay una version distinta a la instalada; `forceUpdate`/`rollback` solo deciden si esa actualizacion pendiente se instala sola o pide confirmacion. Se desactivo `forceUpdate` en este release.
 - Actualizacion: en movil se oculta el control de zoom con botones y se habilita el pellizco tactil nativo para ampliar solo el contenido del modulo; el encabezado y la barra inferior de menus se mantienen fijos usando la Visual Viewport API. En escritorio se conservan los botones de zoom sin cambios.
 - Actualizacion: corregida la altura inconsistente de la barra inferior de menus en movil (habia 6 reglas CSS distintas segun el dispositivo); ahora es de 64px fijos en todos los celulares.
+- Actualizacion: al hacer zoom con el gesto tactil en movil, ahora se puede desplazar (scroll) dentro del contenido ampliado para recorrerlo; fuera del zoom se mantiene el comportamiento normal sin scroll doble.
 
 ## OPAUSTRO v1.4.3 - 2026-07-07
 
