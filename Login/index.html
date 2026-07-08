@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" id="viewportMeta" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Permissions-Policy" content="camera=(self), geolocation=(self), microphone=(), payment=(), usb=(), bluetooth=()">
   <meta http-equiv="Content-Security-Policy" content="default-src &#39;self&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://app.powerbi.com https://cdnjs.cloudflare.com data: blob:; script-src &#39;self&#39; &#39;unsafe-inline&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://cdnjs.cloudflare.com; style-src &#39;self&#39; &#39;unsafe-inline&#39;; img-src &#39;self&#39; data: https:; connect-src &#39;self&#39; https://script.google.com https://script.googleusercontent.com https://docs.google.com https://app.powerbi.com https://cdnjs.cloudflare.com; frame-src &#39;self&#39; https://app.powerbi.com https://docs.google.com; object-src &#39;none&#39;; base-uri &#39;self&#39;; form-action &#39;self&#39;; upgrade-insecure-requests;">
@@ -1690,6 +1690,32 @@
       height: 0;
     }
 
+    /* Consolida en un solo valor las multiples reglas anteriores (64px, 66px, 58px,
+       90px, 78px repartidas en distintos media queries) que causaban que la barra
+       inferior se viera con altura distinta segun el dispositivo. Esta regla, al ir
+       al final y usar box-sizing:content-box, gana siempre: el area visual del menu
+       queda identica en todos los moviles; solo el colchon extra por gesture-bar
+       (env(safe-area-inset-bottom)) puede variar, como corresponde. */
+    .app-screen.is-mobile-layout .bottom-nav {
+      box-sizing: content-box !important;
+      height: 64px !important;
+      min-height: 64px !important;
+      max-height: 64px !important;
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom)) !important;
+    }
+
+    .app-screen.is-mobile-layout .bottom-nav .module-link {
+      height: 52px !important;
+      min-height: 52px !important;
+      max-height: 52px !important;
+    }
+
+    /* Oculta el control de zoom con botones en movil: ahi el zoom se hace con el
+       gesto tactil nativo (pellizcar), no con botones. */
+    .app-screen.is-mobile-layout .content-zoom-float {
+      display: none !important;
+    }
+
   </style>
 </head>
 <body>
@@ -2738,6 +2764,38 @@
 
     window.addEventListener("resize", applyResponsiveMode);
     window.addEventListener("orientationchange", () => setTimeout(applyResponsiveMode, 120));
+
+    // Cuando el usuario hace zoom con el gesto tactil (pellizcar), el navegador
+    // escala TODA la pagina visible, incluido el encabezado fijo y la barra
+    // inferior. La Visual Viewport API informa en tiempo real cuanto escalo y
+    // desplazo el navegador la pagina; con esa info se aplica una transformacion
+    // inversa solo al encabezado y a la barra inferior para que se vean siempre
+    // del mismo tamano y en su lugar, mientras el contenido (el iframe del
+    // modulo) si queda ampliado por el zoom nativo.
+    function setupPinchZoomGuard() {
+      if (!window.visualViewport) return;
+      const vv = window.visualViewport;
+      function update() {
+        if (!$("#appScreen") || !$("#appScreen").classList.contains("is-mobile-layout")) return;
+        const scale = vv.scale || 1;
+        const header = document.querySelector(".app-topbar");
+        const bottomNav = document.querySelector(".bottom-nav");
+        const inverse = scale > 1.001 ? 1 / scale : 1;
+        if (header) {
+          header.style.transform = inverse === 1 ? "" : `translate(${vv.offsetLeft}px, ${vv.offsetTop}px) scale(${inverse})`;
+          header.style.transformOrigin = "top left";
+        }
+        if (bottomNav) {
+          const layoutHeight = document.documentElement.clientHeight;
+          const translateY = (vv.offsetTop + vv.height) - layoutHeight;
+          bottomNav.style.transform = inverse === 1 ? "" : `translate(${vv.offsetLeft}px, ${translateY}px) scale(${inverse})`;
+          bottomNav.style.transformOrigin = "bottom left";
+        }
+      }
+      vv.addEventListener("resize", update);
+      vv.addEventListener("scroll", update);
+    }
+    setupPinchZoomGuard();
 
     window.addEventListener("message", (event) => {
       const data = event.data || {};
